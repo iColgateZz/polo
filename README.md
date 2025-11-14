@@ -1,12 +1,13 @@
 ## General Architecture
 - **Scanner:** source code -> tokens
 - **Parser:** tokens -> AST
+- **Error checking** AST -> success / failure
 - **Compiler:** AST -> IR (custom assembly-like code)
 - **Linker:** IR -> linked IR
 - **VM/Interpreter:** linked IR -> program execution
 
 ## Language Features
-- data types: int, float, string, struct, arrays
+- var keyword, support for numbers, strings, structs, arrays
 - user-defined functions, return
 - global/local variables, scope
 - for/while loops
