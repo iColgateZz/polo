@@ -7,7 +7,7 @@
 - **VM/Interpreter:** linked IR -> program execution
 
 ## Language Features
-- var keyword, support for numbers, strings, structs, arrays
+- types: num, string, struct, array, bool, fn
 - user-defined functions, return
 - global/local variables, scope
 - for/while loops

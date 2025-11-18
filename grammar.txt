@@ -1,54 +1,75 @@
-program        → declaration* EOF ;
+type           : baseType ( "[" "]" )* | "void" ;
+baseType       : "num" | "string" | IDENTIFIER | "bool" | fnType ;
+fnType         : "fn" "(" paramTypes? ")" ("->" type)? ;
+paramTypes     : type ( "," type )* ;
 
-declaration    → funDecl
-               | varDecl
-               | statement ;
+program        : declaration* EOF ;
 
-funDecl        → "fun" function ;
-varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;
+declaration    : funDecl
+               | structDecl
+               | varDecl 
+               | importStmt ;
 
-statement      → exprStmt
+importStmt     : "import" STRING ";" ;
+
+funDecl        : type function ;
+function       : IDENTIFIER "(" parameters? ")" block ;
+parameters     : type IDENTIFIER ( "," type IDENTIFIER )* ;
+arguments      : expression ( "," expression )* ;
+
+structDecl     : "struct" IDENTIFIER "{" ( type IDENTIFIER ";" )+ "}" ";" ;
+
+varDecl        : type IDENTIFIER ( "=" expression )? ";" ;
+
+lvalue         : IDENTIFIER ( "[" expression "]" | "." IDENTIFIER )* ;
+
+expression     : assignment ;
+assignment     : lvalue "=" assignment
+               | logic_or ;
+logic_or       : logic_and ( "or" logic_and )* ;
+logic_and      : equality ( "and" equality )* ;
+equality       : comparison ( ( "!=" | "==" ) comparison )* ;
+comparison     : term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
+term           : factor ( ( "-" | "+" ) factor )* ;
+factor         : unary ( ( "/" | "*" ) unary )* ;
+unary          : ( "!" | "-" ) unary | call ;
+call           : primary ( "(" arguments? ")" | "." IDENTIFIER | "[" expression "]" )* ;
+primary        : literal 
+               | IDENTIFIER 
+               | "(" expression ")"
+               | arrayLiteral
+               | structLiteral ;
+
+arrayLiteral   : "{" (expression ("," expression)*)? "}" ;
+structLiteral  : "{" structFields? "}" ;
+structFields    : IDENTIFIER "=" expression ( "," IDENTIFIER "=" expression )* ;
+
+statement      : assignStmt
+               | exprStmt
                | forStmt
                | ifStmt
                | printStmt
                | returnStmt
                | whileStmt
+               | breakStmt
+               | contStmt
                | block ;
 
-exprStmt       → expression ";" ;
-forStmt        → "for" "(" ( varDecl | exprStmt | ";" )
+exprStmt       : expression ";" ;
+forStmt        : "for" "(" ( varDecl | exprStmt | ";" )
                            expression? ";"
-                           expression? ")" statement ;
-ifStmt         → "if" "(" expression ")" statement
-                 ( "else" statement )? ;
-printStmt      → "print" expression ";" ;
-returnStmt     → "return" expression? ";" ;
-whileStmt      → "while" "(" expression ")" statement ;
-block          → "{" declaration* "}" ;
+                           expression? ")" block ;
+ifStmt         : "if" "(" expression ")" block ( "elif" "(" expression ")" block )* ( "else" block )? ;
+printStmt      : "print" expression ";" ;
+returnStmt     : "return" expression? ";" ;
+whileStmt      : "while" "(" expression ")" block ;
+breakStmt      : "break" ";" ;
+contStmt       : "continue" ";" ;
+block          : "{" (statement | varDecl)* "}" ;
 
-expression     → assignment ;
-
-assignment     → ( call "." )? IDENTIFIER "=" assignment
-               | logic_or ;
-
-logic_or       → logic_and ( "or" logic_and )* ;
-logic_and      → equality ( "and" equality )* ;
-equality       → comparison ( ( "!=" | "==" ) comparison )* ;
-comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
-term           → factor ( ( "-" | "+" ) factor )* ;
-factor         → unary ( ( "/" | "*" ) unary )* ;
-
-unary          → ( "!" | "-" ) unary | call ;
-call           → primary ( "(" arguments? ")" | "." IDENTIFIER )* ;
-primary        → "true" | "false" | "nil"
-               | NUMBER | STRING | IDENTIFIER | "(" expression ")";
-
-function       → IDENTIFIER "(" parameters? ")" block ;
-parameters     → IDENTIFIER ( "," IDENTIFIER )* ;
-arguments      → expression ( "," expression )* ;
-
-NUMBER         → DIGIT+ ( "." DIGIT+ )? ;
-STRING         → "\"" <any char except "\"">* "\"" ;
-IDENTIFIER     → ALPHA ( ALPHA | DIGIT )* ;
-ALPHA          → "a" ... "z" | "A" ... "Z" | "_" ;
-DIGIT          → "0" ... "9" ;
+literal        : NUMBER | STRING | "false" | "true" | "null" ;
+NUMBER         : DIGIT+ ( "." DIGIT+ )? ;
+STRING         : "\"" <any char except "\"">* "\"" ;
+IDENTIFIER     : ALPHA ( ALPHA | DIGIT )* ;
+ALPHA          : "a" ... "z" | "A" ... "Z" | "_" ;
+DIGIT          : "0" ... "9" ;
