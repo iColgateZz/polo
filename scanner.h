@@ -2,6 +2,7 @@
 #define SCANNER_INCLUDE
 
 #include "types.h"
+#include "s8.h"
 
 typedef enum {
     // Single-character tokens
@@ -63,7 +64,23 @@ typedef enum {
 } TokenType;
 
 typedef struct {
-    
+    TokenType type;
+    s8 str;
+    u32 line;
 } Token;
+
+typedef struct {
+    Token *items;
+    usize count;
+    usize capacity;
+} TokenArray;
+
+typedef struct {
+    TokenArray tokens;
+    b32 error;
+} ScanResult;
+
+ScanResult scan(byte *path);
+void pretty_print_tokens(TokenArray tokens);
 
 #endif

@@ -71,8 +71,8 @@ Number num_div(Number n1, Number n2) {
 
 void print_num(Number n) {
     if (_get_type(n) == NUM_INT) {
-        pri32f("i32: %d\n", _get_i32(n));
+        printf("i32: %d\n", _get_i32(n));
     } else {
-        pri32f("float: %lf\n", _get_f64(n));
+        printf("float: %lf\n", _get_f64(n));
     }
 }

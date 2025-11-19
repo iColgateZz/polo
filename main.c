@@ -1,12 +1,18 @@
 #include "types.h"
 #include "instructions.h"
 #include "debug.h"
+#include "scanner.h"
+#include <stdio.h>
+
 
 i32 main(void) {
-    InstructionSet set = {0};
-    da_append(&set, iReturn);
+    ScanResult result = scan("test.polo");
 
-    disassembleInstructionSet(set, "test data");
-    
+    if (result.error) {
+        printf("Some error occured\n");
+    } else {
+        pretty_print_tokens(result.tokens);
+    }
+
     return 0;
 }
