@@ -20,35 +20,6 @@ void _init_scanner(byte *source) {
 }
 
 static inline 
-byte *_read_file(byte *path) {
-    FILE *file = fopen(path, "rb");
-    if (file == NULL) {
-        fprintf(stderr, "Could not open file \"%s\".\n", path);
-        exit(-1);
-    }
-
-    fseek(file, 0L, SEEK_END);
-    usize file_size = ftell(file);
-    rewind(file);
-
-    byte *buffer = malloc(file_size + 1);
-    if (buffer == NULL) {
-        fprintf(stderr, "Not enough memory to read \"%s\".\n", path);
-        exit(-1);
-    }
-    
-    usize bytes_read = fread(buffer, sizeof(char), file_size, file);
-    if (bytes_read < file_size) {
-        fprintf(stderr, "Could not read file \"%s\".\n", path);
-        exit(-1);
-    }
-    
-    buffer[bytes_read] = '\0';
-    fclose(file);
-    return buffer;
-}
-
-static inline 
 b32 _is_alpha(byte c) {
     return (c >= 'a' && c <= 'z') ||
            (c >= 'A' && c <= 'Z') ||
@@ -271,8 +242,7 @@ Token _scanToken(void) {
   return _error_token("Unexpected character");
 }
 
-ScanResult scan(byte *path) {
-    byte *source = _read_file(path);
+ScanResult scan(byte *source) {
     _init_scanner(source);
 
     TokenArray tokens = {0};
