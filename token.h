@@ -1,5 +1,5 @@
-#ifndef SCANNER_INCLUDE
-#define SCANNER_INCLUDE
+#ifndef TOKEN_INCLUDE
+#define TOKEN_INCLUDE
 
 #include "types.h"
 #include "s8.h"
@@ -74,13 +74,5 @@ typedef struct {
     usize count;
     usize capacity;
 } TokenArray;
-
-typedef struct {
-    TokenArray tokens;
-    b32 error;
-} ScanResult;
-
-ScanResult scan(byte *path);
-void pretty_print_tokens(TokenArray tokens);
 
 #endif

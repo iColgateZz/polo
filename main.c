@@ -1,7 +1,7 @@
 #include "types.h"
 #include "instructions.h"
 #include "debug.h"
-#include "scanner.h"
+#include "scanner/scanner.h"
 #include <stdio.h>
 
 
