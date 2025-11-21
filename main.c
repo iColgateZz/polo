@@ -1,6 +1,7 @@
 #include "types.h"
 #include "ast/scanner.h"
 #include "ast/parser.h"
+#include "ast/ast_printer.h"
 #include <stdio.h>
 
 static inline byte *_read_file(byte *path);
@@ -22,7 +23,7 @@ i32 main(void) {
         return -1;
     }
 
-    printf("Successfully parsed\n");
+    print_ast(parse_result.program, 0);
     return 0;
 }
 

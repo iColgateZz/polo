@@ -1,4 +1,2 @@
-num a= = 5;
- | 
-num b = "string
-;
+num a= 5;
+string b = "hallooo";
