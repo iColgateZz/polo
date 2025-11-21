@@ -8,6 +8,7 @@ typedef struct {
     TokenArray tokens;
     size_t current;
     b32 error;
+    b32 panic;
 } Parser;
 
 static Parser parser;
@@ -47,6 +48,7 @@ void _synchronize(void) {
     // Skip tokens until we find a semicolon or EOF
     while (!_at_end()) {
         if (_peek().type == TOKEN_SEMICOLON) {
+            _advance(); // Go past the semicolon
             break;
         }
         _advance();
@@ -59,9 +61,11 @@ AstNode *_error(byte *expected) {
     fprintf(stderr, "Parse error: expected '%s' but got '%.*s' at line %d\n", 
         expected, (i32) t.str.len, t.str.s, t.line);
     parser.error = true;
-    _synchronize();
+    parser.panic = true;
     return new_error_node(t, expected);
 }
+
+#define no_panic(node) do { if (parser.panic) return node; } while (0)
 
 static AstNode *parse_var_decl(void);
 static AstNode *parse_type(void);
@@ -82,6 +86,11 @@ AstNode *parse_program(void) {
     while (!_at_end()) {
         AstNode *decl = parse_var_decl();
         da_append(&decls, decl);
+
+        if (parser.panic) {
+            parser.panic = false;
+            _synchronize();
+        }
     }
     return new_program_node(decls);
 }
@@ -89,6 +98,7 @@ AstNode *parse_program(void) {
 static 
 AstNode *parse_var_decl(void) {
     AstNode *type = parse_type();
+    no_panic(type);
 
     Token name = _peek();
     if (!_match(TOKEN_IDENTIFIER_LITERAL)) {
@@ -98,6 +108,7 @@ AstNode *parse_var_decl(void) {
     AstNode *initializer = NULL;
     if (_match(TOKEN_EQUAL)) {
         initializer = parse_expression();
+        no_panic(initializer);
     }
 
     if (!_match(TOKEN_SEMICOLON)) {
@@ -126,9 +137,11 @@ AstNode *parse_expression(void) {
 static 
 AstNode *parse_assignment(void) {
     AstNode *left = parse_logic_or();
+    no_panic(left);
 
     if (_match(TOKEN_EQUAL)) {
         AstNode *value = parse_assignment();
+        no_panic(value);
         // Only lvalues can be assigned to; for now, just wrap as assign expr
         return new_assign_expr_node(left, value);
     }
@@ -139,10 +152,12 @@ AstNode *parse_assignment(void) {
 static 
 AstNode *parse_logic_or(void) {
     AstNode *left = parse_logic_and();
+    no_panic(left);
 
     while (_match(TOKEN_OR)) {
         Token op = _look(-1);
         AstNode *right = parse_logic_and();
+        no_panic(right);
         left = new_binary_expr_node(left, right, op);
     }
 
@@ -152,10 +167,12 @@ AstNode *parse_logic_or(void) {
 static 
 AstNode *parse_logic_and(void) {
     AstNode *left = parse_equality();
+    no_panic(left);
 
     while (_match(TOKEN_AND)) {
         Token op = _look(-1);
         AstNode *right = parse_equality();
+        no_panic(right);
         left = new_binary_expr_node(left, right, op);
     }
 
@@ -165,10 +182,12 @@ AstNode *parse_logic_and(void) {
 static 
 AstNode *parse_equality(void) {
     AstNode *left = parse_comparison();
+    no_panic(left);
 
     while (_match(TOKEN_BANG_EQUAL) || _match(TOKEN_EQUAL_EQUAL)) {
         Token op = _look(-1);
         AstNode *right = parse_comparison();
+        no_panic(right);
         left = new_binary_expr_node(left, right, op);
     }
 
@@ -178,11 +197,13 @@ AstNode *parse_equality(void) {
 static 
 AstNode *parse_comparison(void) {
     AstNode *left = parse_term();
+    no_panic(left);
 
     while (_match(TOKEN_GREATER) || _match(TOKEN_GREATER_EQUAL) ||
            _match(TOKEN_LESS) || _match(TOKEN_LESS_EQUAL)) {
         Token op = _look(-1);
         AstNode *right = parse_term();
+        no_panic(right);
         left = new_binary_expr_node(left, right, op);
     }
 
@@ -192,10 +213,12 @@ AstNode *parse_comparison(void) {
 static 
 AstNode *parse_term(void) {
     AstNode *left = parse_factor();
+    no_panic(left);
 
     while (_match(TOKEN_MINUS) || _match(TOKEN_PLUS)) {
         Token op = _look(-1);
         AstNode *right = parse_factor();
+        no_panic(right);
         left = new_binary_expr_node(left, right, op);
     }
 
@@ -205,10 +228,12 @@ AstNode *parse_term(void) {
 static 
 AstNode *parse_factor(void) {
     AstNode *left = parse_unary();
+    no_panic(left);
 
     while (_match(TOKEN_SLASH) || _match(TOKEN_STAR)) {
         Token op = _look(-1);
         AstNode *right = parse_unary();
+        no_panic(right);
         left = new_binary_expr_node(left, right, op);
     }
 
@@ -219,6 +244,7 @@ static AstNode *parse_unary(void) {
     if (_match(TOKEN_BANG) || _match(TOKEN_MINUS)) {
         Token op = _look(-1);
         AstNode *operand = parse_unary();
+        no_panic(operand);
         return new_unary_expr_node(operand, op);
     }
     return parse_primary();
@@ -239,6 +265,8 @@ static AstNode *parse_primary(void) {
         return new_identifier_node(t);
     } else if (_match(TOKEN_LEFT_PAREN)) {
         AstNode *expr = parse_expression();
+        no_panic(expr);
+
         if (!_match(TOKEN_RIGHT_PAREN)) {
             return _error(")");
         }
@@ -253,6 +281,7 @@ void _init_parser(TokenArray tokens) {
     parser.tokens = tokens;
     parser.current = 0;
     parser.error = false;
+    parser.panic = false;
 }
 
 ParseResult parse(TokenArray tokens) {
