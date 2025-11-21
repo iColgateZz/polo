@@ -242,7 +242,7 @@ static AstNode *parse_primary(void) {
         if (!_match(TOKEN_RIGHT_PAREN)) {
             return _error(")");
         }
-        return expr;
+        return new_paren_expr_node(expr);
     } else {
         return _error("primary");
     }

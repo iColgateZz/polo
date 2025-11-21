@@ -423,7 +423,7 @@ AstNode *new_paren_expr_node(AstNode *expression) {
     }
 
     *n = (ParenExprNode){
-        .this.ast_type = AST_UNARY_EXPR,
+        .this.ast_type = AST_PAREN_EXPR,
         .expression    = expression
     };
 

@@ -39,6 +39,7 @@ typedef enum {
     AST_ASSIGN_EXPR,         // Assignment expression (lvalue = expr)
     AST_BINARY_EXPR,         // Binary operation (a + b, a == b, etc.)
     AST_UNARY_EXPR,          // Unary operation (!a, -a)
+    AST_PAREN_EXPR,          // Expression in parenthesis
     AST_CALL_EXPR,           // Function call
     AST_FIELD_ACCESS_EXPR,   // Struct field access (a.b)
     AST_INDEX_EXPR,          // Array index access (a[b])
