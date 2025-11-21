@@ -1,1 +1,4 @@
 num a= = 5;
+ | 
+num b = "string
+;

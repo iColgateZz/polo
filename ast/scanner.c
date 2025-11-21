@@ -72,6 +72,7 @@ Token _new_token(TokenType type) {
 
 static inline
 Token _error_token(byte *msg) {
+    fprintf(stderr, "Scan error: '%s' at line %d\n", msg, scanner.line);
     scanner.error = true;
     return (Token) {
         .line = scanner.line,
