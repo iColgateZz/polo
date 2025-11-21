@@ -59,6 +59,8 @@ typedef enum {
     // --- Utility/Other ---
     AST_PARAMETER,           // Single function parameter (type + name)
     AST_STRUCT_FIELD,        // Single struct field (type + name)
+
+    AST_ERROR
 } AstNodeType;
 
 typedef struct {
@@ -68,7 +70,7 @@ typedef struct {
 // Array of pointers to AstNode structs
 typedef struct {
     AstNode **items;
-    usize capaciy;
+    usize capacity;
     usize count;
 } AstNodeArray;
 

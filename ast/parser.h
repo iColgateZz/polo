@@ -4,6 +4,11 @@
 #include "node.h"
 #include "token.h"
 
-AstNode *parse(TokenArray tokens);
+typedef struct {
+    AstNode *program;
+    b32 error;
+} ParseResult;
+
+ParseResult parse(TokenArray tokens);
 
 #endif

@@ -653,3 +653,19 @@ AstNode *new_struct_field_node(AstNode *type, Token name) {
 
     return (AstNode *)n;
 }
+
+AstNode *new_error_node(Token error_token, byte *message) {
+    ErrorNode *n = malloc(sizeof(*n));
+    if (!n) {
+        fprintf(stderr, "Buy more RAM, %s, %d\n", __FILE__, __LINE__);
+        exit(-1);
+    }
+
+    *n = (ErrorNode){
+        .this.ast_type = AST_ERROR,
+        .error_token   = error_token,
+        .msg           = message
+    };
+
+    return (AstNode *)n;
+}

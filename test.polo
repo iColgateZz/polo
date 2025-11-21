@@ -1,3 +1,1 @@
-for (num i = 10; i < 15; i = i + 1) {
-    do whatever;
-}
+num a= = 5;

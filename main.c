@@ -1,21 +1,28 @@
 #include "types.h"
-#include "instructions.h"
-#include "debug.h"
 #include "ast/scanner.h"
+#include "ast/parser.h"
 #include <stdio.h>
 
 static inline byte *_read_file(byte *path);
 
 i32 main(void) {
     byte *source = _read_file("test.polo");
-    ScanResult result = scan(source);
 
-    if (result.error) {
-        printf("Some error occured\n");
-    } else {
-        pretty_print_tokens(result.tokens);
+    ScanResult scan_result = scan(source);
+    if (scan_result.error) {
+        printf("Some error occured while scanning\n");
+        return -1;
     }
 
+    pretty_print_tokens(scan_result.tokens);
+
+    ParseResult parse_result = parse(scan_result.tokens);
+    if (parse_result.error) {
+        printf("Some error occured while parsing\n");
+        return -1;
+    }
+
+    printf("Successfully parsed\n");
     return 0;
 }
 

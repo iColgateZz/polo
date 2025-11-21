@@ -256,6 +256,12 @@ typedef struct {
     Token name;
 } StructFieldNode;
 
+typedef struct {
+    AstNode this;
+    Token error_token;
+    byte *msg;
+} ErrorNode;
+
 AstNode *new_primitive_type_node(Token t);
 AstNode *new_struct_type_node(Token name);
 AstNode *new_array_type_node(AstNode *base_type, usize dimensions);
@@ -297,5 +303,6 @@ AstNode *new_struct_literal_node(AstNodeArray fields);
 AstNode *new_struct_field_assign_node(Token field_name, AstNode *value);
 AstNode *new_parameter_node(AstNode *type, Token name);
 AstNode *new_struct_field_node(AstNode *type, Token name);
+AstNode *new_error_node(Token error_token, byte *message);
 
 #endif
