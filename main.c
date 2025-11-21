@@ -2,6 +2,7 @@
 #include "ast/scanner.h"
 #include "ast/parser.h"
 #include "ast/ast_printer.h"
+#include "ast/ast_checker.h"
 #include <stdio.h>
 
 static inline byte *_read_file(byte *path);
@@ -11,7 +12,6 @@ i32 main(void) {
 
     ScanResult scan_result = scan(source);
     if (scan_result.error) {
-        printf("Some error occured while scanning\n");
         return -1;
     }
 
@@ -19,11 +19,15 @@ i32 main(void) {
 
     ParseResult parse_result = parse(scan_result.tokens);
     if (parse_result.error) {
-        printf("Some error occured while parsing\n");
         return -1;
     }
 
     print_ast(parse_result.program, 0);
+
+    if (semantic_errors(parse_result.program)) {
+        return -1;
+    }
+
     return 0;
 }
 
