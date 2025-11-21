@@ -17,6 +17,11 @@ Token _peek(void) {
     return parser.tokens.items[parser.current];
 }
 
+static inline
+Token _look(i32 i) {
+    return parser.tokens.items[parser.current + i];
+}
+
 static inline 
 b32 _at_end(void) {
     return _peek().type == TOKEN_EOF;
@@ -61,6 +66,15 @@ AstNode *_error(byte *expected) {
 static AstNode *parse_var_decl(void);
 static AstNode *parse_type(void);
 static AstNode *parse_expression(void);
+static AstNode *parse_assignment(void);
+static AstNode *parse_logic_or(void);
+static AstNode *parse_logic_and(void);
+static AstNode *parse_equality(void);
+static AstNode *parse_comparison(void);
+static AstNode *parse_term(void);
+static AstNode *parse_factor(void);
+static AstNode *parse_unary(void);
+static AstNode *parse_primary(void);
 
 static 
 AstNode *parse_program(void) {
@@ -99,8 +113,6 @@ AstNode *parse_type(void) {
         _match(TOKEN_STRING) ||
         _match(TOKEN_BOOL)) {
         return new_primitive_type_node(t);
-    } else if (_match(TOKEN_IDENTIFIER_LITERAL)) {
-        return new_struct_type_node(t); // For now, treat as user type
     } else {
         return _error("type");
     }
@@ -108,16 +120,131 @@ AstNode *parse_type(void) {
 
 static 
 AstNode *parse_expression(void) {
-    // For now, just parse a literal or identifier
+    return parse_assignment();
+}
+
+static 
+AstNode *parse_assignment(void) {
+    AstNode *left = parse_logic_or();
+
+    if (_match(TOKEN_EQUAL)) {
+        AstNode *value = parse_assignment();
+        // Only lvalues can be assigned to; for now, just wrap as assign expr
+        return new_assign_expr_node(left, value);
+    }
+
+    return left;
+}
+
+static 
+AstNode *parse_logic_or(void) {
+    AstNode *left = parse_logic_and();
+
+    while (_match(TOKEN_OR)) {
+        Token op = _look(-1);
+        AstNode *right = parse_logic_and();
+        left = new_binary_expr_node(left, right, op);
+    }
+
+    return left;
+}
+
+static 
+AstNode *parse_logic_and(void) {
+    AstNode *left = parse_equality();
+
+    while (_match(TOKEN_AND)) {
+        Token op = _look(-1);
+        AstNode *right = parse_equality();
+        left = new_binary_expr_node(left, right, op);
+    }
+
+    return left;
+}
+
+static 
+AstNode *parse_equality(void) {
+    AstNode *left = parse_comparison();
+
+    while (_match(TOKEN_BANG_EQUAL) || _match(TOKEN_EQUAL_EQUAL)) {
+        Token op = _look(-1);
+        AstNode *right = parse_comparison();
+        left = new_binary_expr_node(left, right, op);
+    }
+
+    return left;
+}
+
+static 
+AstNode *parse_comparison(void) {
+    AstNode *left = parse_term();
+
+    while (_match(TOKEN_GREATER) || _match(TOKEN_GREATER_EQUAL) ||
+           _match(TOKEN_LESS) || _match(TOKEN_LESS_EQUAL)) {
+        Token op = _look(-1);
+        AstNode *right = parse_term();
+        left = new_binary_expr_node(left, right, op);
+    }
+
+    return left;
+}
+
+static 
+AstNode *parse_term(void) {
+    AstNode *left = parse_factor();
+
+    while (_match(TOKEN_MINUS) || _match(TOKEN_PLUS)) {
+        Token op = _look(-1);
+        AstNode *right = parse_factor();
+        left = new_binary_expr_node(left, right, op);
+    }
+
+    return left;
+}
+
+static 
+AstNode *parse_factor(void) {
+    AstNode *left = parse_unary();
+
+    while (_match(TOKEN_SLASH) || _match(TOKEN_STAR)) {
+        Token op = _look(-1);
+        AstNode *right = parse_unary();
+        left = new_binary_expr_node(left, right, op);
+    }
+
+    return left;
+}
+
+static AstNode *parse_unary(void) {
+    if (_match(TOKEN_BANG) || _match(TOKEN_MINUS)) {
+        Token op = _look(-1);
+        AstNode *operand = parse_unary();
+        return new_unary_expr_node(operand, op);
+    }
+    return parse_primary();
+}
+
+static AstNode *parse_primary(void) {
     Token t = _peek();
+
     if (_match(TOKEN_NUMBER_LITERAL)) {
         return new_number_literal_node(t);
     } else if (_match(TOKEN_STRING_LITERAL)) {
         return new_string_literal_node(t);
+    } else if (_match(TOKEN_BOOL_LITERAL)) {
+        return new_bool_literal_node(t);
+    } else if (_match(TOKEN_NULL_LITERAL)) {
+        return new_null_literal_node(t);
     } else if (_match(TOKEN_IDENTIFIER_LITERAL)) {
         return new_identifier_node(t);
+    } else if (_match(TOKEN_LEFT_PAREN)) {
+        AstNode *expr = parse_expression();
+        if (!_match(TOKEN_RIGHT_PAREN)) {
+            return _error(")");
+        }
+        return expr;
     } else {
-        return _error("expression");
+        return _error("primary");
     }
 }
 
