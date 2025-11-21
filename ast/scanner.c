@@ -144,7 +144,7 @@ TokenType _identifier_type(void) {
         case 'f':
             if (len > 1) {
                 switch (scanner.start[1]) {
-                    case 'a': return _check_keyword(2, 3, "lse", TOKEN_FALSE_LITERAL);
+                    case 'a': return _check_keyword(2, 3, "lse", TOKEN_BOOL_LITERAL);
                     case 'n': return _check_keyword(2, 0, "", TOKEN_FN);
                     case 'o': return _check_keyword(2, 1, "r", TOKEN_FOR);
                 }
@@ -175,7 +175,7 @@ TokenType _identifier_type(void) {
                 }
             }
             break;
-        case 't': return _check_keyword(1, 3, "rue", TOKEN_TRUE_LITERAL);
+        case 't': return _check_keyword(1, 3, "rue", TOKEN_BOOL_LITERAL);
         case 'v': return _check_keyword(1, 3, "oid", TOKEN_VOID);
         case 'w': return _check_keyword(1, 4, "hile", TOKEN_WHILE);
     }
@@ -286,8 +286,7 @@ byte *_token_type_to_str(TokenType type) {
         case TOKEN_IDENTIFIER_LITERAL: return "IDENTIFIER";
         case TOKEN_NUMBER_LITERAL: return "NUMBER";
         case TOKEN_STRING_LITERAL: return "STRING";
-        case TOKEN_TRUE_LITERAL: return "TRUE";
-        case TOKEN_FALSE_LITERAL: return "FALSE";
+        case TOKEN_BOOL_LITERAL: return "BOOL";
         case TOKEN_NULL_LITERAL: return "NULL";
         case TOKEN_NUM: return "NUM_TYPE";
         case TOKEN_STRING: return "STRING_TYPE";
