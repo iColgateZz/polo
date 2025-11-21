@@ -12,8 +12,7 @@ declaration    : funDecl
 
 importStmt     : "import" STRING ";" ;
 
-funDecl        : type function ;
-function       : IDENTIFIER "(" parameters? ")" block ;
+funDecl        : type IDENTIFIER "(" parameters? ")" block ;
 parameters     : type IDENTIFIER ( "," type IDENTIFIER )* ;
 arguments      : expression ( "," expression )* ;
 

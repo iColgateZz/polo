@@ -2,7 +2,6 @@
 #define AST_NODE
 
 #include "types.h"
-#include "../scanner/token.h"
 
 typedef enum {
     // --- Top-level ---
@@ -15,10 +14,12 @@ typedef enum {
     AST_IMPORT,              // Import statement
 
     // --- Types ---
-    AST_TYPE,                // General type node (with base type, array dims, etc.)
     AST_TYPE_FN,             // Function type (fn(...) -> ...)
     AST_TYPE_ARRAY,          // Array type (baseType[])
-    AST_TYPE_PRIMITIVE,      // Primitive type (num, string, bool, void)
+    AST_TYPE_BOOL,           // Primitive type (num, string, bool, void)
+    AST_TYPE_VOID,
+    AST_TYPE_NUM,
+    AST_TYPE_STRING,
     AST_TYPE_STRUCT,         // User-defined struct type
 
     // --- Statements ---
@@ -63,5 +64,12 @@ typedef enum {
 typedef struct {
     AstNodeType ast_type;
 } AstNode;
+
+// Array of pointers to AstNode structs
+typedef struct {
+    AstNode **items;
+    usize capaciy;
+    usize count;
+} AstNodeArray;
 
 #endif
