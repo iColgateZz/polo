@@ -1,7 +1,7 @@
 #include "types.h"
 #include "instructions.h"
 #include "debug.h"
-#include "scanner/scanner.h"
+#include "ast/scanner.h"
 #include <stdio.h>
 
 static inline byte *_read_file(byte *path);

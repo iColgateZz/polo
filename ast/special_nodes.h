@@ -2,7 +2,7 @@
 #define SPECIAL_NODES_INCLUDE
 
 #include "node.h"
-#include "../scanner/token.h"
+#include "token.h"
 
 // --- Type Nodes ---
 
