@@ -1,8 +1,34 @@
 #include "special_nodes.h"
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include "da.h"
 
-#define malloc(x) malloc(x)
+typedef struct {
+    void **items;
+    usize capacity;
+    usize count;
+} PointerArray;
+
+static PointerArray array;
+
+void init_special_nodes(void) {
+    array = (PointerArray) {0};
+}
+
+void free_special_nodes(void) { 
+    for (usize i = 0; i < array.count; ++i) {
+        free(array.items[i]);
+    }
+    free(array.items);
+}
+
+void *my_malloc(usize x) {
+    void *n = malloc(x);
+    da_append(&array, n);
+    return n;
+}
+
+#define malloc(x) my_malloc(x)
 
 AstNode *new_primitive_type_node(Token t) {
     PrimitiveTypeNode *n = malloc(sizeof(*n));

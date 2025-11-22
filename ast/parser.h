@@ -10,5 +10,6 @@ typedef struct {
 } ParseResult;
 
 ParseResult parse(TokenArray tokens);
+void free_ast(AstNode *program);
 
 #endif

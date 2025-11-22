@@ -286,5 +286,16 @@ void _init_parser(TokenArray tokens) {
 
 ParseResult parse(TokenArray tokens) {
     _init_parser(tokens);
+    init_special_nodes();
     return (ParseResult) { parse_program(), parser.error };
+}
+
+void free_ast(AstNode *program) {
+    // free da arrays
+    // Later when there are more nodes with da arrays
+    // I should probably store refs to the arrays 
+    // to simplify freeing. 
+    ProgramNode *p = (ProgramNode *)program;
+    free(p->declarations.items);
+    free_special_nodes();
 }

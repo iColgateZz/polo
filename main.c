@@ -4,6 +4,7 @@
 #include "ast/ast_printer.h"
 #include "ast/ast_checker.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 static inline byte *_read_file(byte *path);
 
@@ -27,6 +28,14 @@ i32 main(void) {
     if (semantic_errors(parse_result.program)) {
         return -1;
     }
+
+    // convert to bytecode
+    // free source, tokens (only array), ast (each node + da pointer)
+    // run bytecode
+
+    free(source);
+    free(scan_result.tokens.items);
+    free_ast(parse_result.program);
 
     return 0;
 }

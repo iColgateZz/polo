@@ -305,4 +305,7 @@ AstNode *new_parameter_node(AstNode *type, Token name);
 AstNode *new_struct_field_node(AstNode *type, Token name);
 AstNode *new_error_node(Token error_token, byte *message);
 
+void init_special_nodes(void);
+void free_special_nodes(void);
+
 #endif
