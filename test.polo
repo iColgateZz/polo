@@ -1,4 +1,5 @@
 num b;
+num b;
 
 num a= 5 + !b * 25 + (cringe - aboba);
 

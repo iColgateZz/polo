@@ -12,6 +12,10 @@ typedef struct {
 
 static Checker checker;
 
+void _init_checker(void) {
+    checker = (Checker) {0};
+}
+
 #define no_panic(retval) do { if (checker.panic) return retval; } while (0)
 
 static void _semantic_error(const byte *fmt, ...) {
@@ -95,6 +99,12 @@ AstNode *_check_node(AstNode *node) {
 
         case AST_VAR_DECL: {
             VarDeclNode *var = (VarDeclNode *)node;
+            if (_lookup_global(var->name)) {
+                _semantic_error("redeclaration of variable '%.*s' at line %d",
+                (i32)var->name.str.len, var->name.str.s, var->name.line);
+                return NULL;
+            }
+
             _add_global(var->name, var->type);
             if (var->initializer) {
                 AstNode *init_type = _check_node(var->initializer);
@@ -178,6 +188,9 @@ AstNode *_check_node(AstNode *node) {
 }
 
 b32 semantic_errors(AstNode *program) {
+    // Assignment eval from the right
+    // Can't assign to non-variable object
+    // Figure out what to do with ! and - in unary
     _init_checker();
     _init_global();
 
