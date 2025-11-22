@@ -59,7 +59,6 @@ void _add_global(Token name, AstNode *type) {
 
 static PrimitiveTypeNode sentinel_type;
 AstNode *_get_type_of(AstNode *node) {
-    if (!node) return NULL;
     switch (node->ast_type) {
         case AST_LITERAL_NUMBER:
             sentinel_type.this.ast_type = AST_TYPE_NUM;
