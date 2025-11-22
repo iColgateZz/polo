@@ -13,7 +13,6 @@ typedef struct {
 static Checker checker;
 
 #define no_panic(retval) do { if (checker.panic) return retval; } while (0)
-#define no_panic_void()  do { if (checker.panic) return; } while (0)
 
 static void _semantic_error(const byte *fmt, ...) {
     fprintf(stderr, "Semantic error: ");
