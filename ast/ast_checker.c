@@ -3,6 +3,7 @@
 #include "token.h"
 #include <stdio.h>
 #include "da.h"
+#include <stdarg.h>
 
 typedef struct {
     b32 error;
@@ -72,6 +73,18 @@ b32 _types_compatible(AstNode *lhs_type, AstNode *rhs_type) {
     return _get_type_of(lhs_type)->ast_type == _get_type_of(rhs_type)->ast_type;
 }
 
+static 
+void _semantic_error(const byte *fmt, ...) {
+    fprintf(stderr, "Semantic error: ");
+    va_list args;
+    va_start(args, fmt);
+    vfprintf(stderr, fmt, args);
+    va_end(args);
+    fputc('\n', stderr);
+    checker.error = true;
+    checker.panic = true;
+}
+
 AstNode *_check_expression(AstNode *node);
 
 void _check_semantics(AstNode *node) {
@@ -84,9 +97,7 @@ void _check_semantics(AstNode *node) {
             ProgramNode *prog = (ProgramNode *)node;
             for (usize i = 0; i < prog->declarations.count; ++i) {
                 _check_semantics(prog->declarations.items[i]);
-                if (checker.panic) {
-                    checker.panic = false; // Reset panic for next declaration
-                }
+                checker.panic = false; // Reset panic for next declaration
             }
             break;
         }
@@ -97,18 +108,14 @@ void _check_semantics(AstNode *node) {
                 AstNode *init_type = _check_expression(var->initializer);
                 no_panic_void();
                 if (!_types_compatible(var->type, init_type)) {
-                    fprintf(stderr, "Semantic error: type mismatch in assignment to '%.*s' at line %d\n",
+                    _semantic_error("type mismatch in assignment to '%.*s' at line %d",
                         (i32)var->name.str.len, var->name.str.s, var->name.line);
-                    checker.error = true;
-                    checker.panic = true;
                 }
             }
             break;
         }
         default:
-            fprintf(stderr, "Semantic error: unreachable\n");
-            checker.error = true;
-            checker.panic = true;
+            _semantic_error("unknown declaration type");
             break;
     }
 }
@@ -134,10 +141,8 @@ AstNode *_check_expression(AstNode *node) {
             IdentifierNode *id = (IdentifierNode *)node;
             AstNode *type = _lookup_global(id->name);
             if (!type) {
-                fprintf(stderr, "Semantic error: use of undefined variable '%.*s' at line %d\n",
+                _semantic_error("use of undefined variable '%.*s' at line %d",
                     (i32)id->name.str.len, id->name.str.s, id->name.line);
-                checker.error = true;
-                checker.panic = true;
                 return NULL;
             }
             return type;
@@ -150,10 +155,8 @@ AstNode *_check_expression(AstNode *node) {
             AstNode *rhs_type = _check_expression(assign->value);
             no_panic(NULL);
             if (!_types_compatible(lhs_type, rhs_type)) {
-                fprintf(stderr, "Semantic error: type mismatch in assignment at line %d\n",
+                _semantic_error("type mismatch in assignment at line %d",
                     assign->lvalue ? ((IdentifierNode *)assign->lvalue)->name.line : 0);
-                checker.error = true;
-                checker.panic = true;
                 return NULL;
             }
             return lhs_type;
@@ -166,10 +169,8 @@ AstNode *_check_expression(AstNode *node) {
             AstNode *right_type = _check_expression(bin->right);
             no_panic(NULL);
             if (!_types_compatible(left_type, right_type)) {
-                fprintf(stderr, "Semantic error: type mismatch in binary expression '%.*s' at line %d\n",
+                _semantic_error("type mismatch in binary expression '%.*s' at line %d",
                     (i32)bin->op_token.str.len, bin->op_token.str.s, bin->op_token.line);
-                checker.error = true;
-                checker.panic = true;
                 return NULL;
             }
             return left_type;
@@ -184,8 +185,7 @@ AstNode *_check_expression(AstNode *node) {
         }
 
         default:
-            checker.error = true;
-            checker.panic = true;
+            _semantic_error("unknown expression type");
             return NULL;
     }
 }
