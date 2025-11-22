@@ -15,8 +15,15 @@ static Checker checker;
 #define no_panic(retval) do { if (checker.panic) return retval; } while (0)
 #define no_panic_void()  do { if (checker.panic) return; } while (0)
 
-void _init_checker(void) {
-    checker = (Checker) {0};
+static void _semantic_error(const byte *fmt, ...) {
+    fprintf(stderr, "Semantic error: ");
+    va_list args;
+    va_start(args, fmt);
+    vfprintf(stderr, fmt, args);
+    va_end(args);
+    fputc('\n', stderr);
+    checker.error = true;
+    checker.panic = true;
 }
 
 typedef struct {
@@ -53,6 +60,7 @@ void _add_global(Token name, AstNode *type) {
 
 static PrimitiveTypeNode sentinel_type;
 AstNode *_get_type_of(AstNode *node) {
+    if (!node) return NULL;
     switch (node->ast_type) {
         case AST_LITERAL_NUMBER:
             sentinel_type.this.ast_type = AST_TYPE_NUM;
@@ -73,59 +81,34 @@ b32 _types_compatible(AstNode *lhs_type, AstNode *rhs_type) {
     return _get_type_of(lhs_type)->ast_type == _get_type_of(rhs_type)->ast_type;
 }
 
-static 
-void _semantic_error(const byte *fmt, ...) {
-    fprintf(stderr, "Semantic error: ");
-    va_list args;
-    va_start(args, fmt);
-    vfprintf(stderr, fmt, args);
-    va_end(args);
-    fputc('\n', stderr);
-    checker.error = true;
-    checker.panic = true;
-}
-
-AstNode *_check_expression(AstNode *node);
-
-void _check_semantics(AstNode *node) {
-    no_panic_void();
-
-    if (!node) return;
+AstNode *_check_node(AstNode *node) {
+    no_panic(NULL);
+    if (!node) return NULL;
 
     switch (node->ast_type) {
         case AST_PROGRAM: {
             ProgramNode *prog = (ProgramNode *)node;
             for (usize i = 0; i < prog->declarations.count; ++i) {
-                _check_semantics(prog->declarations.items[i]);
+                _check_node(prog->declarations.items[i]);
                 checker.panic = false; // Reset panic for next declaration
             }
-            break;
+            return NULL;
         }
+
         case AST_VAR_DECL: {
             VarDeclNode *var = (VarDeclNode *)node;
             _add_global(var->name, var->type);
             if (var->initializer) {
-                AstNode *init_type = _check_expression(var->initializer);
-                no_panic_void();
+                AstNode *init_type = _check_node(var->initializer);
+                no_panic(NULL);
                 if (!_types_compatible(var->type, init_type)) {
                     _semantic_error("type mismatch in assignment to '%.*s' at line %d",
                         (i32)var->name.str.len, var->name.str.s, var->name.line);
                 }
             }
-            break;
+            return NULL;
         }
-        default:
-            _semantic_error("unknown declaration type");
-            break;
-    }
-}
 
-AstNode *_check_expression(AstNode *node) {
-    no_panic(NULL);
-
-    if (!node) return NULL;
-
-    switch (node->ast_type) {
         case AST_LITERAL_NUMBER:
         case AST_LITERAL_STRING:
         case AST_LITERAL_BOOL:
@@ -150,9 +133,9 @@ AstNode *_check_expression(AstNode *node) {
 
         case AST_ASSIGN_EXPR: {
             AssignExprNode *assign = (AssignExprNode *)node;
-            AstNode *lhs_type = _check_expression(assign->lvalue);
+            AstNode *lhs_type = _check_node(assign->lvalue);
             no_panic(NULL);
-            AstNode *rhs_type = _check_expression(assign->value);
+            AstNode *rhs_type = _check_node(assign->value);
             no_panic(NULL);
             if (!_types_compatible(lhs_type, rhs_type)) {
                 _semantic_error("type mismatch in assignment at line %d",
@@ -164,9 +147,9 @@ AstNode *_check_expression(AstNode *node) {
 
         case AST_BINARY_EXPR: {
             BinaryExprNode *bin = (BinaryExprNode *)node;
-            AstNode *left_type = _check_expression(bin->left);
+            AstNode *left_type = _check_node(bin->left);
             no_panic(NULL);
-            AstNode *right_type = _check_expression(bin->right);
+            AstNode *right_type = _check_node(bin->right);
             no_panic(NULL);
             if (!_types_compatible(left_type, right_type)) {
                 _semantic_error("type mismatch in binary expression '%.*s' at line %d",
@@ -176,29 +159,31 @@ AstNode *_check_expression(AstNode *node) {
             return left_type;
         }
 
-        case AST_UNARY_EXPR:
-        case AST_PAREN_EXPR: {
+        case AST_UNARY_EXPR: {
             UnaryExprNode *un = (UnaryExprNode *)node;
-            AstNode *operand_type = _check_expression(un->operand);
+            AstNode *operand_type = _check_node(un->operand);
             no_panic(NULL);
             return operand_type;
         }
 
+        case AST_PAREN_EXPR: {
+            ParenExprNode *paren = (ParenExprNode *)node;
+            AstNode *expr_type = _check_node(paren->expression);
+            no_panic(NULL);
+            return expr_type;
+        }
+
         default:
-            _semantic_error("unknown expression type");
+            _semantic_error("unknown node type");
             return NULL;
     }
 }
 
 b32 semantic_errors(AstNode *program) {
-    //TODO check for redeclaration of global var
-    // Assignment eval from the right
-    // Can't assign to non-variable object
-    // Figure out what to do with ! and - in unary
     _init_checker();
     _init_global();
 
-    _check_semantics(program);
+    _check_node(program);
 
     return checker.error;
 }
