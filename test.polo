@@ -1,6 +1,5 @@
-num b;
-num d;
-num c;
-num x = b = c + 2 = d;
+num b = 5;
+bool a = true;
+bool x = !a or b;
 
 // comment

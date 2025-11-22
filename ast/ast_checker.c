@@ -12,13 +12,15 @@ typedef struct {
 
 static Checker checker;
 
+static inline
 void _init_checker(void) {
     checker = (Checker) {0};
 }
 
 #define no_panic(retval) do { if (checker.panic) return retval; } while (0)
 
-static void _semantic_error(const byte *fmt, ...) {
+static 
+void _semantic_error(const byte *fmt, ...) {
     fprintf(stderr, "Semantic error: ");
     va_list args;
     va_start(args, fmt);
@@ -27,6 +29,23 @@ static void _semantic_error(const byte *fmt, ...) {
     fputc('\n', stderr);
     checker.error = true;
     checker.panic = true;
+}
+
+static
+b32 _any_type(AstNode *node, i32 count, ...) {
+    va_list args;
+    va_start(args, count);
+
+    for (int i = 0; i < count; ++i) {
+        AstNodeType type = va_arg(args, AstNodeType);
+        if (node->ast_type == type) {
+            va_end(args);
+            return true;
+        }
+    }
+
+    va_end(args);
+    return false;
 }
 
 typedef struct {
@@ -46,6 +65,7 @@ void _init_global(void) {
     global_symbols = (SymbolTable) {0};
 }
 
+static
 AstNode *_lookup_global(Token name) {
     for (size_t i = 0; i < global_symbols.count; ++i) {
         if (global_symbols.items[i].name.str.len == name.str.len &&
@@ -56,12 +76,14 @@ AstNode *_lookup_global(Token name) {
     return NULL;
 }
 
+static inline
 void _add_global(Token name, AstNode *type) {
     Symbol s = {.name = name, .type = type};
     da_append(&global_symbols, s);
 }
 
 static PrimitiveTypeNode sentinel_type;
+static inline
 AstNode *_get_type_of(AstNode *node) {
     switch (node->ast_type) {
         case AST_LITERAL_NUMBER:
@@ -78,11 +100,13 @@ AstNode *_get_type_of(AstNode *node) {
     }
 }
 
+static inline
 b32 _types_compatible(AstNode *lhs_type, AstNode *rhs_type) {
     if (!lhs_type || !rhs_type) return false;
     return _get_type_of(lhs_type)->ast_type == _get_type_of(rhs_type)->ast_type;
 }
 
+static
 AstNode *_check_node(AstNode *node) {
     no_panic(NULL);
     if (!node) return NULL;
@@ -177,6 +201,21 @@ AstNode *_check_node(AstNode *node) {
             UnaryExprNode *un = (UnaryExprNode *)node;
             AstNode *operand_type = _check_node(un->operand);
             no_panic(NULL);
+
+            if (!_any_type(operand_type, 2, AST_TYPE_BOOL, AST_LITERAL_BOOL)
+                && un->op_token.type == TOKEN_BANG) {
+                _semantic_error("type mismatch in unary expression '%.*s' at line %d",
+                    (i32)un->op_token.str.len, un->op_token.str.s, un->op_token.line);
+                return NULL;
+            }
+
+            if (!_any_type(operand_type, 2, AST_TYPE_NUM, AST_LITERAL_NUMBER)
+                && un->op_token.type == TOKEN_MINUS) {
+                _semantic_error("type mismatch in unary expression '%.*s' at line %d",
+                    (i32)un->op_token.str.len, un->op_token.str.s, un->op_token.line);
+                return NULL;
+            }
+
             return operand_type;
         }
 
@@ -194,7 +233,6 @@ AstNode *_check_node(AstNode *node) {
 }
 
 b32 semantic_errors(AstNode *program) {
-    // Figure out what to do with ! and - in unary
     _init_checker();
     _init_global();
 
