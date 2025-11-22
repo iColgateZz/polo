@@ -1,8 +1,6 @@
 num b;
-num b;
-
-num a= 5 + !b * 25 + (cringe - aboba);
-
-num a = b = c + 2 = d;
+num d;
+num c;
+num x = b = c + 2 = d;
 
 // comment

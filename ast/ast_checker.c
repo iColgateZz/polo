@@ -141,13 +141,19 @@ AstNode *_check_node(AstNode *node) {
 
         case AST_ASSIGN_EXPR: {
             AssignExprNode *assign = (AssignExprNode *)node;
-            AstNode *lhs_type = _check_node(assign->lvalue);
-            no_panic(NULL);
             AstNode *rhs_type = _check_node(assign->value);
             no_panic(NULL);
+            AstNode *lhs_type = _check_node(assign->lvalue);
+            no_panic(NULL);
+
+            if (lhs_type->ast_type != AST_IDENTIFIER) {
+                _semantic_error("cannot assign to an expression");
+                return NULL;
+            }
+
             if (!_types_compatible(lhs_type, rhs_type)) {
                 _semantic_error("type mismatch in assignment at line %d",
-                    assign->lvalue ? ((IdentifierNode *)assign->lvalue)->name.line : 0);
+                    ((IdentifierNode *)assign->lvalue)->name.line);
                 return NULL;
             }
             return lhs_type;
@@ -188,8 +194,6 @@ AstNode *_check_node(AstNode *node) {
 }
 
 b32 semantic_errors(AstNode *program) {
-    // Assignment eval from the right
-    // Can't assign to non-variable object
     // Figure out what to do with ! and - in unary
     _init_checker();
     _init_global();
