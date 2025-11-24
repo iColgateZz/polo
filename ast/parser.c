@@ -86,6 +86,8 @@ static AstNode *parse_declaration(void);
 static AstNode *parse_fun_decl(void);
 static AstNode *parse_parameters(void);
 static AstNode *parse_block(void);
+static AstNode *parse_call(void);
+static AstNode *parse_arguments(void);
 
 static 
 AstNode *parse_program(void) {
@@ -130,6 +132,10 @@ static AstNode *parse_fun_decl(void) {
     if (_match(TOKEN_LEFT_BRACE)) {
         AstNode *body = parse_block();
         no_panic(body);
+
+        if (!_match(TOKEN_RIGHT_BRACE))
+            return _error("'}'");
+
         return new_function_decl_node(type, name, p->parameters, body);
     } 
 
@@ -171,9 +177,6 @@ AstNode *parse_block(void) {
 
         da_append(&stmts, stmt);
     }
-
-    if (!_match(TOKEN_RIGHT_BRACE))
-        return _error("'}'");
 
     return new_block_node(stmts);
 }
@@ -323,17 +326,53 @@ AstNode *parse_factor(void) {
     return left;
 }
 
-static AstNode *parse_unary(void) {
+static 
+AstNode *parse_unary(void) {
     if (_match(TOKEN_BANG) || _match(TOKEN_MINUS)) {
         Token op = _look(-1);
         AstNode *operand = parse_unary();
         no_panic(operand);
         return new_unary_expr_node(operand, op);
     }
-    return parse_primary();
+    return parse_call();
 }
 
-static AstNode *parse_primary(void) {
+static 
+AstNode *parse_call(void) {
+    AstNode *expr = parse_primary();
+    no_panic(expr);
+
+    if (_match(TOKEN_LEFT_PAREN)) {
+        AstNode *args = parse_arguments();
+        no_panic(args);
+
+        ArgumentListNode *a = (ArgumentListNode *)args;
+        if (!_match(TOKEN_RIGHT_PAREN))
+            return _error("')' after arguments");
+
+        return new_call_expr_node(expr, a->arguments);
+    }
+
+    return expr;
+}
+
+static 
+AstNode *parse_arguments(void) {
+    AstNodeArray args = {0};
+    if (_peek().type == TOKEN_RIGHT_PAREN)
+        return new_argument_list_node(args);
+
+    do {
+        AstNode *arg = parse_expression();
+        no_panic(arg);
+        da_append(&args, arg);
+    } while (_match(TOKEN_COMMA));
+    
+    return new_argument_list_node(args);
+}
+
+static 
+AstNode *parse_primary(void) {
     Token t = _peek();
 
     if (_match(TOKEN_NUMBER_LITERAL))
