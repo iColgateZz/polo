@@ -58,7 +58,10 @@ typedef enum {
 
     // --- Utility/Other ---
     AST_PARAMETER,           // Single function parameter (type + name)
-    AST_STRUCT_FIELD,        // Single struct field (type + name)
+    AST_STRUCT_FIELD_ASSIGN, // Single struct field (type + name)
+    AST_ELIF_CLAUSE_LIST,    // List of elif statements
+    AST_ACCESS_LIST,         // List of . or [idx] accesses
+    AST_STRUCT_FIELD,        // 
 
     AST_ERROR
 } AstNodeType;

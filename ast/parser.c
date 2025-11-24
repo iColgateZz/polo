@@ -125,7 +125,6 @@ static AstNode *parse_fun_decl(void) {
     AstNode *params = parse_parameters();
     no_panic(params);
 
-    ParameterListNode *p = (ParameterListNode *)params;
     if (!_match(TOKEN_RIGHT_PAREN))
         return _error("')'");
 
@@ -136,11 +135,11 @@ static AstNode *parse_fun_decl(void) {
         if (!_match(TOKEN_RIGHT_BRACE))
             return _error("'}'");
 
-        return new_function_decl_node(type, name, p->parameters, body);
+        return new_function_decl_node(type, name, params, body);
     } 
 
     if (_match(TOKEN_SEMICOLON))
-        return new_function_decl_node(type, name, p->parameters, NULL);
+        return new_function_decl_node(type, name, params, NULL);
 
     return _error("function body or ';'");
 }
@@ -346,11 +345,10 @@ AstNode *parse_call(void) {
         AstNode *args = parse_arguments();
         no_panic(args);
 
-        ArgumentListNode *a = (ArgumentListNode *)args;
         if (!_match(TOKEN_RIGHT_PAREN))
             return _error("')' after arguments");
 
-        return new_call_expr_node(expr, a->arguments);
+        return new_call_expr_node(expr, args);
     }
 
     return expr;

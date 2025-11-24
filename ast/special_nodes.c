@@ -77,7 +77,7 @@ AstNode *new_array_type_node(AstNode *base_type, usize dimensions) {
     return (AstNode *)n;
 }
 
-AstNode *new_fn_type_node(AstNodeArray param_types, AstNode *return_type) {
+AstNode *new_fn_type_node(AstNode *param_types, AstNode *return_type) {
     FnTypeNode *n = malloc(sizeof(*n));
 
     *n = (FnTypeNode){
@@ -134,7 +134,7 @@ AstNode *new_elif_clause_node(AstNode *condition, AstNode *block) {
     return (AstNode *)n;
 }
 
-AstNode *new_if_stmt_node(AstNode *condition, AstNode *then_block, AstNodeArray elifs, AstNode *else_block) {
+AstNode *new_if_stmt_node(AstNode *condition, AstNode *then_block, AstNode *elifs, AstNode *else_block) {
     IfStmtNode *n = malloc(sizeof(*n));
 
     *n = (IfStmtNode){
@@ -353,7 +353,7 @@ AstNode *new_assign_expr_node(AstNode *lvalue, AstNode *value) {
     return (AstNode *)n;
 }
 
-AstNode *new_function_decl_node(AstNode *return_type, Token name, AstNodeArray parameters, AstNode *body) {
+AstNode *new_function_decl_node(AstNode *return_type, Token name, AstNode *parameters, AstNode *body) {
     FunctionDeclNode *n = malloc(sizeof(*n));
 
     *n = (FunctionDeclNode){
@@ -367,7 +367,7 @@ AstNode *new_function_decl_node(AstNode *return_type, Token name, AstNodeArray p
     return (AstNode *)n;
 }
 
-AstNode *new_struct_decl_node(Token name, AstNodeArray fields) {
+AstNode *new_struct_decl_node(Token name, AstNode *fields) {
     StructDeclNode *n = malloc(sizeof(*n));
 
     *n = (StructDeclNode){
@@ -403,7 +403,7 @@ AstNode *new_import_node(Token path) {
     return (AstNode *)n;
 }
 
-AstNode *new_lvalue_node(AstNode *base, AstNodeArray accesses) {
+AstNode *new_lvalue_node(AstNode *base, AstNode *accesses) {
     LValueNode *n = malloc(sizeof(*n));
 
     *n = (LValueNode){
@@ -439,7 +439,7 @@ AstNode *new_index_access_node(AstNode *array, AstNode *index) {
     return (AstNode *)n;
 }
 
-AstNode *new_call_expr_node(AstNode *callee, AstNodeArray arguments) {
+AstNode *new_call_expr_node(AstNode *callee, AstNode *arguments) {
     CallExprNode *n = malloc(sizeof(*n));
 
     *n = (CallExprNode){
@@ -477,7 +477,7 @@ AstNode *new_struct_field_assign_node(Token field_name, AstNode *value) {
     StructFieldAssignNode *n = malloc(sizeof(*n));
 
     *n = (StructFieldAssignNode){
-        .this.ast_type = AST_STRUCT_FIELD,
+        .this.ast_type = AST_STRUCT_FIELD_ASSIGN,
         .field_name    = field_name,
         .value         = value
     };
@@ -516,6 +516,28 @@ AstNode *new_error_node(Token error_token, byte *message) {
         .this.ast_type = AST_ERROR,
         .error_token   = error_token,
         .msg           = message
+    };
+
+    return (AstNode *)n;
+}
+
+AstNode *new_elif_clause_list_node(AstNodeArray elifs) {
+    ElifClauseListNode *n = malloc(sizeof(*n));
+
+    *n = (ElifClauseListNode){
+        .this.ast_type = AST_ELIF_CLAUSE_LIST,
+        .elifs = elifs
+    };
+
+    return (AstNode *)n;
+}
+
+AstNode *new_access_list_node(AstNodeArray accesses) {
+    AccessListNode *n = malloc(sizeof(*n));
+
+    *n = (AccessListNode){
+        .this.ast_type = AST_ACCESS_LIST,
+        .accesses = accesses
     };
 
     return (AstNode *)n;
