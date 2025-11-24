@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include "da.h"
 #include <stdarg.h>
+#include "macros.h"
 
 typedef struct {
     b32 error;
@@ -188,11 +189,50 @@ AstNode *_check_node(AstNode *node) {
             no_panic(NULL);
             AstNode *right_type = _check_node(bin->right);
             no_panic(NULL);
+
             if (!_types_compatible(left_type, right_type)) {
                 _semantic_error("type mismatch in binary expression '%.*s' at line %d",
                     (i32)bin->op_token.str.len, bin->op_token.str.s, bin->op_token.line);
                 return NULL;
             }
+
+            // enforce types depending on the operation
+            // here both values have the same type
+            switch (bin->op_token.type) {
+                case TOKEN_PLUS:
+                case TOKEN_MINUS:
+                case TOKEN_STAR:
+                case TOKEN_SLASH:
+                    // operations only defined for numbers
+                    // they produce a number
+                    if (!_any_type(left_type, 2, AST_TYPE_NUM, AST_LITERAL_NUMBER)) {
+                        _semantic_error("Operation '%.*s' is only defined for numbers. Error at line %d",
+                            (i32)bin->op_token.str.len, bin->op_token.str.s, bin->op_token.line);
+                        return NULL;
+                    }
+                    break;
+
+                case TOKEN_AND:
+                case TOKEN_OR:
+                case TOKEN_EQUAL_EQUAL:
+                case TOKEN_BANG_EQUAL:
+                case TOKEN_GREATER:
+                case TOKEN_GREATER_EQUAL:
+                case TOKEN_LESS:
+                case TOKEN_LESS_EQUAL:
+                    // operations defined for numbers and booleans
+                    // operations produce a boolean value
+                    if (!_any_type(left_type, 4, AST_TYPE_NUM, AST_LITERAL_NUMBER, AST_TYPE_BOOL, AST_LITERAL_BOOL)) {
+                        _semantic_error("Operation '%.*s' is only defined for numbers and booleans. Error at line %d",
+                            (i32)bin->op_token.str.len, bin->op_token.str.s, bin->op_token.line);
+                        return NULL;
+                    }
+                    sentinel_type.this.ast_type = AST_TYPE_BOOL;
+                    return (AstNode *)&sentinel_type;
+
+                default: UNREACHABLE();
+            }
+
             return left_type;
         }
 

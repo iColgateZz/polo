@@ -1,12 +1,7 @@
 #include "debug.h"
 #include <stdio.h>
 #include "s8.h"
-
-#define UNREACHABLE()   \
-        do {            \
-            fprintf(stderr, "Unreachable: %s, %d\n", __FILE__, __LINE__);   \
-            exit(-1);   \
-        } while (0)
+#include "macros.h"
 
 static inline usize _simple_instruction(byte *name, usize offset);
 static inline usize _disassemble_instruction(ConversionResult result, usize offset);

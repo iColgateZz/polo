@@ -4,12 +4,7 @@
 #include "da.h"
 #include "string.h"
 #include <stdio.h>
-
-#define UNREACHABLE()   \
-        do {            \
-            fprintf(stderr, "Unreachable: %s, %d\n", __FILE__, __LINE__);   \
-            exit(-1);   \
-        } while (0)
+#include "macros.h"
 
 static ConversionResult res;
 
