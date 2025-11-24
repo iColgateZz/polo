@@ -6,6 +6,7 @@ paramTypes     : type ( "," type )* ;
 program        : declaration* EOF ;
 
 declaration    : funDecl
+               | funProto
                | structDecl
                | varDecl 
                | importStmt ;
@@ -15,6 +16,8 @@ importStmt     : "import" STRING ";" ;
 funDecl        : type IDENTIFIER "(" parameters? ")" block ;
 parameters     : type IDENTIFIER ( "," type IDENTIFIER )* ;
 arguments      : expression ( "," expression )* ;
+
+funProto       : type IDENTIFIER "(" parameters? ")" ";" ;
 
 structDecl     : "struct" IDENTIFIER "{" ( type IDENTIFIER ";" )+ "}" ";" ;
 
