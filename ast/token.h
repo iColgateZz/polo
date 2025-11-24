@@ -36,7 +36,6 @@ typedef enum {
     TOKEN_NUMBER_LITERAL,
     TOKEN_STRING_LITERAL,
     TOKEN_BOOL_LITERAL,
-    TOKEN_NULL_LITERAL,
 
     // Keywords
     TOKEN_NUM,

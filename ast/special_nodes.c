@@ -294,17 +294,6 @@ AstNode *new_bool_literal_node(Token token) {
     return (AstNode *)n;
 }
 
-AstNode *new_null_literal_node(Token token) {
-    NullLiteralNode *n = malloc(sizeof(*n));
-
-    *n = (NullLiteralNode){
-        .this.ast_type = AST_LITERAL_NULL,
-        .token         = token
-    };
-
-    return (AstNode *)n;
-}
-
 AstNode *new_identifier_node(Token name) {
     IdentifierNode *n = malloc(sizeof(*n));
 

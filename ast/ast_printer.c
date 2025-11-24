@@ -61,11 +61,6 @@ void print_ast(AstNode *node, i32 indent) {
             _indent(indent); printf("Bool: %.*s\n", (i32)b->token.str.len, b->token.str.s);
             break;
         }
-        case AST_LITERAL_NULL: {
-            NullLiteralNode *n = (NullLiteralNode *)node;
-            _indent(indent); printf("Null: %.*s\n", (i32)n->token.str.len, n->token.str.s);
-            break;
-        }
         case AST_IDENTIFIER: {
             IdentifierNode *id = (IdentifierNode *)node;
             _indent(indent); printf("Identifier: %.*s\n", (i32)id->name.str.len, id->name.str.s);

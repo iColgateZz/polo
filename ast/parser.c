@@ -259,8 +259,6 @@ static AstNode *parse_primary(void) {
         return new_string_literal_node(t);
     } else if (_match(TOKEN_BOOL_LITERAL)) {
         return new_bool_literal_node(t);
-    } else if (_match(TOKEN_NULL_LITERAL)) {
-        return new_null_literal_node(t);
     } else if (_match(TOKEN_IDENTIFIER_LITERAL)) {
         return new_identifier_node(t);
     } else if (_match(TOKEN_LEFT_PAREN)) {

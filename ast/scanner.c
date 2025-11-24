@@ -162,8 +162,6 @@ TokenType _identifier_type(void) {
         case 'n':
             if ((len) == 3)
                 return _check_keyword(1, 2, "um", TOKEN_NUM);
-            else if ((len) == 4)
-                return _check_keyword(1, 3, "ull", TOKEN_NULL_LITERAL);
             break;
         case 'o': return _check_keyword(1, 1, "r", TOKEN_OR);
         case 'p': return _check_keyword(1, 4, "rint", TOKEN_PRINT);
@@ -288,7 +286,6 @@ byte *_token_type_to_str(TokenType type) {
         case TOKEN_NUMBER_LITERAL: return "NUMBER";
         case TOKEN_STRING_LITERAL: return "STRING";
         case TOKEN_BOOL_LITERAL: return "BOOL";
-        case TOKEN_NULL_LITERAL: return "NULL";
         case TOKEN_NUM: return "NUM_TYPE";
         case TOKEN_STRING: return "STRING_TYPE";
         case TOKEN_BOOL: return "BOOL_TYPE";

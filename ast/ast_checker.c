@@ -144,7 +144,6 @@ AstNode *_check_node(AstNode *node) {
         case AST_LITERAL_NUMBER:
         case AST_LITERAL_STRING:
         case AST_LITERAL_BOOL:
-        case AST_LITERAL_NULL:
         case AST_TYPE_NUM:
         case AST_TYPE_STRING:
         case AST_TYPE_BOOL:

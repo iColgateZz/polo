@@ -146,11 +146,6 @@ typedef struct {
 
 typedef struct {
     AstNode this;
-    Token token; // 'null' token
-} NullLiteralNode;
-
-typedef struct {
-    AstNode this;
     Token name; // identifier token
 } IdentifierNode;
 
@@ -284,7 +279,6 @@ AstNode *new_program_node(AstNodeArray declarations);
 AstNode *new_number_literal_node(Token value);
 AstNode *new_string_literal_node(Token value);
 AstNode *new_bool_literal_node(Token token);
-AstNode *new_null_literal_node(Token token);
 AstNode *new_identifier_node(Token name);
 AstNode *new_binary_expr_node(AstNode *left, AstNode *right, Token op_token);
 AstNode *new_unary_expr_node(AstNode *operand, Token op_token);

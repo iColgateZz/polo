@@ -1,5 +1,5 @@
 num b = 5;
-bool a = true;
+bool a = null;
 bool x = !a or b;
 
 // comment

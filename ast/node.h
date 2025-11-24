@@ -55,7 +55,6 @@ typedef enum {
     AST_LITERAL_NUMBER,      // Number literal
     AST_LITERAL_STRING,      // String literal
     AST_LITERAL_BOOL,        // true/false
-    AST_LITERAL_NULL,        // null
 
     // --- Utility/Other ---
     AST_PARAMETER,           // Single function parameter (type + name)
