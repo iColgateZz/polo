@@ -1,4 +1,4 @@
-CFLAGS=-Wall -Wextra -O2 -Iinclude -g
+CFLAGS=-Wall -Wextra -O2 -Iinclude
 CC=gcc
 
 SRC := $(shell find . -name "*.c")

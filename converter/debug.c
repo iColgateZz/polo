@@ -2,15 +2,17 @@
 #include <stdio.h>
 
 static inline usize _simple_instruction(byte *name, usize offset);
+static inline usize _disassemble_instruction(InstructionSet set, usize offset);
 
-void disassembleInstructionSet(InstructionSet set, byte *set_name) {
+void disassemble(InstructionSet set, byte *set_name) {
     printf("== %s ==\n", set_name);
 
     for (usize offset = 0; offset < set.count;)
-        offset = disassembleInstruction(set, offset);
+        offset = _disassemble_instruction(set, offset);
 }
 
-usize disassembleInstruction(InstructionSet set, usize offset) {
+static inline
+usize _disassemble_instruction(InstructionSet set, usize offset) {
     printf("%04zu ", offset);
 
     Instruction instruction = set.items[offset];
@@ -23,7 +25,8 @@ usize disassembleInstruction(InstructionSet set, usize offset) {
     }
 }
 
-static inline usize _simple_instruction(byte *name, usize offset) {
+static inline 
+usize _simple_instruction(byte *name, usize offset) {
     printf("%s\n", name);
     return offset + 1;
 }
