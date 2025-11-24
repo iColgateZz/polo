@@ -8,6 +8,12 @@ typedef struct {
     isize len;
 } s8;
 
+typedef struct {
+    s8 *items;
+    usize count;
+    usize capacity;
+} s8Array;
+
 #define countof(x)              (isize)(sizeof(x) / sizeof(*(x)))
 #define lenof(s)                countof(s) - 1
 

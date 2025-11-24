@@ -2,8 +2,8 @@
 #define DEBUG_INCLUDE
 
 #include "types.h"
-#include "instructions.h"
+#include "converter.h"
 
-void disassemble(InstructionSet set, byte *set_name);
+void disassemble(ConversionResult result, byte *set_name);
 
 #endif

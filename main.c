@@ -3,6 +3,8 @@
 #include "ast/parser.h"
 #include "ast/ast_printer.h"
 #include "ast/ast_checker.h"
+#include "converter/converter.h"
+#include "converter/debug.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -29,9 +31,8 @@ i32 main(void) {
         return -1;
     }
 
-    // convert to bytecode
-    // free source, tokens (only array), ast (each node + da pointer)
-    // run bytecode
+    ConversionResult conv_result = convert(parse_result.program);
+    disassemble(conv_result, "main");
 
     free(source);
     free(scan_result.tokens.items);

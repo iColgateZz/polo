@@ -1,5 +1,7 @@
-num b = 5;
-bool a = null;
-bool x = !a or b;
+num b = 5.5;
+bool a = true;
+bool x = !a;
+
+num y = 5 + 13 * b - 84;
 
 // comment
