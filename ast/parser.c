@@ -20,6 +20,9 @@ Token _peek(void) {
 
 static inline
 Token _look(i32 i) {
+    if (parser.current + i >= parser.tokens.count)
+        return parser.tokens.items[parser.tokens.count - 1];
+
     return parser.tokens.items[parser.current + i];
 }
 
@@ -79,12 +82,16 @@ static AstNode *parse_term(void);
 static AstNode *parse_factor(void);
 static AstNode *parse_unary(void);
 static AstNode *parse_primary(void);
+static AstNode *parse_declaration(void);
+static AstNode *parse_fun_decl(void);
+static AstNode *parse_parameters(void);
+static AstNode *parse_block(void);
 
 static 
 AstNode *parse_program(void) {
     AstNodeArray decls = {0};
     while (!_at_end()) {
-        AstNode *decl = parse_var_decl();
+        AstNode *decl = parse_declaration();
         da_append(&decls, decl);
 
         if (parser.panic) {
@@ -93,6 +100,82 @@ AstNode *parse_program(void) {
         }
     }
     return new_program_node(decls);
+}
+
+static AstNode *parse_declaration(void) {
+    Token lookahead = _look(2);
+    
+    if (lookahead.type == TOKEN_LEFT_PAREN)
+        return parse_fun_decl();
+
+    return parse_var_decl();
+}
+
+static AstNode *parse_fun_decl(void) {
+    AstNode *type = parse_type();
+    no_panic(type);
+
+    Token name = _peek();
+    if (!_match(TOKEN_IDENTIFIER_LITERAL))
+        return _error("function or variable name");
+
+    // Function declaration or prototype
+    AstNode *params = parse_parameters();
+    no_panic(params);
+
+    ParameterListNode *p = (ParameterListNode *)params;
+    if (!_match(TOKEN_RIGHT_PAREN))
+        return _error("')'");
+
+    if (_match(TOKEN_LEFT_BRACE)) {
+        AstNode *body = parse_block();
+        no_panic(body);
+        return new_function_decl_node(type, name, p->parameters, body);
+    } 
+
+    if (_match(TOKEN_SEMICOLON))
+        return new_function_decl_node(type, name, p->parameters, NULL);
+
+    return _error("function body or ';'");
+}
+
+static 
+AstNode *parse_parameters(void) {
+    AstNodeArray params = {0};
+    if (_peek().type == TOKEN_RIGHT_PAREN)
+        return new_parameter_list_node(params);
+
+    do {
+        AstNode *type = parse_type();
+        no_panic(type);
+
+        Token name = _peek();
+        if (!_match(TOKEN_IDENTIFIER_LITERAL))
+            return _error("parameter name");
+
+        AstNode *param = new_parameter_node(type, name);
+        da_append(&params, param);
+    } while (_match(TOKEN_COMMA));
+
+    return new_parameter_list_node(params);
+}
+
+static 
+AstNode *parse_block(void) {
+    AstNodeArray stmts = {0};
+
+    while (_peek().type != TOKEN_RIGHT_BRACE && !_at_end()) {
+        // For now, only allow varDecls in function bodies
+        AstNode *stmt = parse_var_decl();
+        no_panic(stmt);
+
+        da_append(&stmts, stmt);
+    }
+
+    if (!_match(TOKEN_RIGHT_BRACE))
+        return _error("'}'");
+
+    return new_block_node(stmts);
 }
 
 static 
@@ -253,25 +336,29 @@ static AstNode *parse_unary(void) {
 static AstNode *parse_primary(void) {
     Token t = _peek();
 
-    if (_match(TOKEN_NUMBER_LITERAL)) {
+    if (_match(TOKEN_NUMBER_LITERAL))
         return new_number_literal_node(t);
-    } else if (_match(TOKEN_STRING_LITERAL)) {
+
+    if (_match(TOKEN_STRING_LITERAL))
         return new_string_literal_node(t);
-    } else if (_match(TOKEN_BOOL_LITERAL)) {
+
+    if (_match(TOKEN_BOOL_LITERAL))
         return new_bool_literal_node(t);
-    } else if (_match(TOKEN_IDENTIFIER_LITERAL)) {
+
+    if (_match(TOKEN_IDENTIFIER_LITERAL))
         return new_identifier_node(t);
-    } else if (_match(TOKEN_LEFT_PAREN)) {
+
+    if (_match(TOKEN_LEFT_PAREN)) {
         AstNode *expr = parse_expression();
         no_panic(expr);
 
-        if (!_match(TOKEN_RIGHT_PAREN)) {
+        if (!_match(TOKEN_RIGHT_PAREN))
             return _error(")");
-        }
+
         return new_paren_expr_node(expr);
-    } else {
-        return _error("primary");
     }
+    
+    return _error("primary");
 }
 
 static inline
