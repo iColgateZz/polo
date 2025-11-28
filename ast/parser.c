@@ -119,7 +119,10 @@ static AstNode *parse_fun_decl(void) {
 
     Token name = _peek();
     if (!_match(TOKEN_IDENTIFIER_LITERAL))
-        return _error("function or variable name");
+        return _error("function name");
+
+    if (!_match(TOKEN_LEFT_PAREN))
+        return _error("(");
 
     // Function declaration or prototype
     AstNode *params = parse_parameters();
