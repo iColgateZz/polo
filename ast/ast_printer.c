@@ -69,6 +69,13 @@ void print_ast(AstNode *node, i32 indent) {
             print_ast(call->arguments, indent + 4);
             break;
         }
+        case AST_ARGUMENT_LIST: {
+            ArgumentListNode *args = (ArgumentListNode *)node;
+            for (usize i = 0; i < args->arguments.count; ++i) {
+                print_ast(args->arguments.items[i], indent + 2);
+            }
+            break;
+        }
         case AST_VAR_DECL: {
             VarDeclNode *var = (VarDeclNode *)node;
             _indent(indent); printf("VarDecl: %.*s\n", (i32)var->name.str.len, var->name.str.s);
