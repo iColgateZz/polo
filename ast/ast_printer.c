@@ -40,7 +40,6 @@ void print_ast(AstNode *node, i32 indent) {
         }
         case AST_PARAMETER_LIST: {
             ParameterListNode *plist = (ParameterListNode *)node;
-            _indent(indent); printf("ParameterList\n");
             for (usize i = 0; i < plist->parameters.count; ++i) {
                 print_ast(plist->parameters.items[i], indent + 2);
             }

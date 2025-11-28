@@ -83,6 +83,38 @@ void _add_global(Token name, AstNode *type) {
     da_append(&global_symbols, s);
 }
 
+typedef struct {
+    Token name;
+    AstNode *decl;
+} FunctionSymbol;
+
+typedef struct {
+    FunctionSymbol *items;
+    size_t count;
+    size_t capacity;
+} FunctionTable;
+
+static FunctionTable global_functions;
+
+static void _init_functions(void) {
+    global_functions = (FunctionTable){0};
+}
+
+static FunctionSymbol *_lookup_function(Token name) {
+    for (size_t i = 0; i < global_functions.count; ++i) {
+        if (global_functions.items[i].name.str.len == name.str.len &&
+            memcmp(global_functions.items[i].name.str.s, name.str.s, name.str.len) == 0) {
+            return &global_functions.items[i];
+        }
+    }
+    return NULL;
+}
+
+static void _add_function(Token name, AstNode *decl) {
+    FunctionSymbol s = {.name = name, .decl = decl};
+    da_append(&global_functions, s);
+}
+
 static PrimitiveTypeNode sentinel_type;
 static inline
 AstNode *_get_type_of(AstNode *node) {
@@ -120,6 +152,69 @@ AstNode *_check_node(AstNode *node) {
                 checker.panic = false; // Reset panic for next declaration
             }
             return NULL;
+        }
+
+        case AST_FUNCTION_DECL: {
+            FunctionDeclNode *fn = (FunctionDeclNode *)node;
+
+            if (_lookup_function(fn->name)) {
+                _semantic_error("redeclaration of function '%.*s' at line %d",
+                    (i32)fn->name.str.len, fn->name.str.s, fn->name.line);
+                return NULL;
+            }
+
+            _add_function(fn->name, node);
+
+            // Check parameter names for duplicates
+            // for (usize i = 0; i < fn->parameters.count; ++i) {
+            //     ParameterNode *param_i = (ParameterNode *)fn->parameters.items[i];
+            //     for (usize j = i + 1; j < fn->parameters.count; ++j) {
+            //         ParameterNode *param_j = (ParameterNode *)fn->parameters.items[j];
+            //         if (param_i->name.str.len == param_j->name.str.len &&
+            //             memcmp(param_i->name.str.s, param_j->name.str.s, param_i->name.str.len) == 0) {
+            //             _semantic_error("duplicate parameter name '%.*s' in function '%.*s' at line %d",
+            //                 (i32)param_i->name.str.len, param_i->name.str.s,
+            //                 (i32)fn->name.str.len, fn->name.str.s, fn->name.line);
+            //             return NULL;
+            //         }
+            //     }
+            // }
+
+            if (fn->body) {
+                _check_node(fn->body);
+                no_panic(NULL);
+            }
+
+            return NULL;
+        }
+
+        case AST_BLOCK: {
+            BlockNode *block = (BlockNode *)node;
+            for (usize i = 0; i < block->statements.count; ++i) {
+                _check_node(block->statements.items[i]);
+                no_panic(NULL);
+            }
+            return NULL;
+        }
+
+        case AST_PARAMETER: {
+            return node;
+        }
+
+        case AST_CALL_EXPR: {
+            CallExprNode *call = (CallExprNode *)node;
+            IdentifierNode *callee = (IdentifierNode *)call->callee;
+            // Lookup function
+            FunctionSymbol *fn = _lookup_function(callee->name);
+            if (!fn) {
+                _semantic_error("call to undefined function '%.*s' at line %d", 
+                    (i32)callee->name.str.len, callee->name.str.s, callee->name.line);
+                return NULL;
+            }
+            // Check argument count and types
+            // ...
+            FunctionDeclNode *fn_decl = (FunctionDeclNode *)fn->decl;
+            return fn_decl->return_type;
         }
 
         case AST_VAR_DECL: {
@@ -274,6 +369,7 @@ AstNode *_check_node(AstNode *node) {
 b32 semantic_errors(AstNode *program) {
     _init_checker();
     _init_global();
+    _init_functions();
 
     _check_node(program);
 
