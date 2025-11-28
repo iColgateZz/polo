@@ -23,6 +23,52 @@ void print_ast(AstNode *node, i32 indent) {
             }
             break;
         }
+        case AST_FUNCTION_DECL: {
+            FunctionDeclNode *fn = (FunctionDeclNode *)node;
+            _indent(indent); printf("FunctionDecl: %.*s\n", (i32)fn->name.str.len, fn->name.str.s);
+            _indent(indent + 2); printf("Return type:\n");
+            print_ast(fn->return_type, indent + 4);
+            _indent(indent + 2); printf("Parameters:\n");
+            print_ast(fn->parameters, indent + 4);
+            if (fn->body) {
+                _indent(indent + 2); printf("Body:\n");
+                print_ast(fn->body, indent + 4);
+            } else {
+                _indent(indent + 2); printf("Prototype (no body)\n");
+            }
+            break;
+        }
+        case AST_PARAMETER_LIST: {
+            ParameterListNode *plist = (ParameterListNode *)node;
+            _indent(indent); printf("ParameterList\n");
+            for (usize i = 0; i < plist->parameters.count; ++i) {
+                print_ast(plist->parameters.items[i], indent + 2);
+            }
+            break;
+        }
+        case AST_PARAMETER: {
+            ParameterNode *param = (ParameterNode *)node;
+            _indent(indent); printf("Parameter: %.*s\n", (i32)param->name.str.len, param->name.str.s);
+            print_ast(param->type, indent + 2);
+            break;
+        }
+        case AST_BLOCK: {
+            BlockNode *block = (BlockNode *)node;
+            _indent(indent); printf("Block\n");
+            for (usize i = 0; i < block->statements.count; ++i) {
+                print_ast(block->statements.items[i], indent + 2);
+            }
+            break;
+        }
+        case AST_CALL_EXPR: {
+            CallExprNode *call = (CallExprNode *)node;
+            _indent(indent); printf("CallExpr\n");
+            _indent(indent + 2); printf("Callee:\n");
+            print_ast(call->callee, indent + 4);
+            _indent(indent + 2); printf("Arguments:\n");
+            print_ast(call->arguments, indent + 4);
+            break;
+        }
         case AST_VAR_DECL: {
             VarDeclNode *var = (VarDeclNode *)node;
             _indent(indent); printf("VarDecl: %.*s\n", (i32)var->name.str.len, var->name.str.s);

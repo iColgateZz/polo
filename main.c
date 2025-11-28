@@ -27,16 +27,16 @@ i32 main(void) {
 
     print_ast(parse_result.program, 0);
 
-    if (semantic_errors(parse_result.program)) {
-        return -1;
-    }
+    // if (semantic_errors(parse_result.program)) {
+    //     return -1;
+    // }
 
-    ConversionResult conv_result = convert(parse_result.program);
-    disassemble(conv_result, "main");
+    // ConversionResult conv_result = convert(parse_result.program);
+    // disassemble(conv_result, "main");
 
-    free(source);
-    free(scan_result.tokens.items);
-    free_ast(parse_result.program);
+    // free(source);
+    // free(scan_result.tokens.items);
+    // free_ast(parse_result.program);
 
     return 0;
 }

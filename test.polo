@@ -1,7 +1,8 @@
-num b = 5.5;
-bool a = true;
-bool x = !a;
+num a = 5;
+num b = 3;
 
-num y = 5 + 13 * b - 84;
+num func(num a, num b);
+
+num x = func(a, b) + 15;
 
 // comment
