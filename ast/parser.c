@@ -131,12 +131,9 @@ static AstNode *parse_fun_decl(void) {
     if (!_match(TOKEN_RIGHT_PAREN))
         return _error("')'");
 
-    if (_match(TOKEN_LEFT_BRACE)) {
+    if (_peek().type == TOKEN_LEFT_BRACE) {
         AstNode *body = parse_block();
         no_panic(body);
-
-        if (!_match(TOKEN_RIGHT_BRACE))
-            return _error("'}'");
 
         return new_function_decl_node(type, name, params, body);
     } 
@@ -170,15 +167,22 @@ AstNode *parse_parameters(void) {
 
 static 
 AstNode *parse_block(void) {
+    _match(TOKEN_LEFT_BRACE);
     AstNodeArray stmts = {0};
 
     while (_peek().type != TOKEN_RIGHT_BRACE && !_at_end()) {
         // For now, only allow varDecls in function bodies
         AstNode *stmt = parse_var_decl();
-        no_panic(stmt);
+        if (parser.panic) {
+            parser.panic = false;
+            _synchronize();
+        }
 
         da_append(&stmts, stmt);
     }
+
+    if (!_match(TOKEN_RIGHT_BRACE))
+            return _error("'}'");
 
     return new_block_node(stmts);
 }
