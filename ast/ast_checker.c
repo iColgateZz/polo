@@ -49,6 +49,11 @@ b32 _any_type(AstNode *node, i32 count, ...) {
     return false;
 }
 
+b32 _token_eq(Token a, Token b) {
+    return a.str.len == b.str.len &&
+        memcmp(a.str.s, b.str.s, a.str.len) == 0;
+}
+
 typedef struct {
     Token name;
     AstNode *type;
@@ -69,10 +74,8 @@ void _init_global(void) {
 static
 AstNode *_lookup_global(Token name) {
     for (size_t i = 0; i < global_symbols.count; ++i) {
-        if (global_symbols.items[i].name.str.len == name.str.len &&
-            memcmp(global_symbols.items[i].name.str.s, name.str.s, name.str.len) == 0) {
+        if (_token_eq(global_symbols.items[i].name, name))
             return global_symbols.items[i].type;
-        }
     }
     return NULL;
 }
@@ -103,10 +106,8 @@ static void _init_functions(void) {
 
 static FunctionSymbol *_lookup_function(Token name) {
     for (size_t i = 0; i < global_functions.count; ++i) {
-        if (global_functions.items[i].name.str.len == name.str.len &&
-            memcmp(global_functions.items[i].name.str.s, name.str.s, name.str.len) == 0) {
+        if (_token_eq(global_functions.items[i].name, name))
             return &global_functions.items[i];
-        }
     }
     return NULL;
 }
@@ -169,20 +170,19 @@ AstNode *_check_node(AstNode *node) {
 
             _add_function(fn->name, node, fn->body == NULL);
 
-            // Check parameter names for duplicates
-            // for (usize i = 0; i < fn->parameters.count; ++i) {
-            //     ParameterNode *param_i = (ParameterNode *)fn->parameters.items[i];
-            //     for (usize j = i + 1; j < fn->parameters.count; ++j) {
-            //         ParameterNode *param_j = (ParameterNode *)fn->parameters.items[j];
-            //         if (param_i->name.str.len == param_j->name.str.len &&
-            //             memcmp(param_i->name.str.s, param_j->name.str.s, param_i->name.str.len) == 0) {
-            //             _semantic_error("duplicate parameter name '%.*s' in function '%.*s' at line %d",
-            //                 (i32)param_i->name.str.len, param_i->name.str.s,
-            //                 (i32)fn->name.str.len, fn->name.str.s, fn->name.line);
-            //             return NULL;
-            //         }
-            //     }
-            // }
+            AstNodeArray params = ((ParameterListNode *) fn->parameters)->parameters;
+            for (usize i = 0; i < params.count; ++i) {
+                ParameterNode *param_i = (ParameterNode *)params.items[i];
+                for (usize j = i + 1; j < params.count; ++j) {
+                    ParameterNode *param_j = (ParameterNode *)params.items[j];
+                    if (_token_eq(param_i->name, param_j->name)) {
+                        _semantic_error("duplicate parameter name '%.*s' in function '%.*s' at line %d",
+                            (i32)param_i->name.str.len, param_i->name.str.s,
+                            (i32)fn->name.str.len, fn->name.str.s, fn->name.line);
+                        return NULL;
+                    }
+                }
+            }
 
             if (fn->body) {
                 _check_node(fn->body);

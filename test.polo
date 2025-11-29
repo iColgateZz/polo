@@ -1,7 +1,7 @@
 num a = 5;
 num b = 3;
 
-num func(num a, num b);
+num func(num a, num a);
 
 num func(num a, num b) {
     num c;
