@@ -13,7 +13,6 @@ num x = func(a, b) + 15;
 // comment
 
 // todo
-// prototype and later decl should not cause an error
 // check parameters
 // check arguments
 // check their types

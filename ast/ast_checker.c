@@ -86,6 +86,7 @@ void _add_global(Token name, AstNode *type) {
 typedef struct {
     Token name;
     AstNode *decl;
+    b32 proto;
 } FunctionSymbol;
 
 typedef struct {
@@ -110,8 +111,8 @@ static FunctionSymbol *_lookup_function(Token name) {
     return NULL;
 }
 
-static void _add_function(Token name, AstNode *decl) {
-    FunctionSymbol s = {.name = name, .decl = decl};
+static void _add_function(Token name, AstNode *decl, b32 proto) {
+    FunctionSymbol s = {.name = name, .decl = decl, .proto = proto};
     da_append(&global_functions, s);
 }
 
@@ -157,13 +158,16 @@ AstNode *_check_node(AstNode *node) {
         case AST_FUNCTION_DECL: {
             FunctionDeclNode *fn = (FunctionDeclNode *)node;
 
-            if (_lookup_function(fn->name)) {
-                _semantic_error("redeclaration of function '%.*s' at line %d",
-                    (i32)fn->name.str.len, fn->name.str.s, fn->name.line);
-                return NULL;
+            FunctionSymbol *fn_symbol = _lookup_function(fn->name);
+            if (fn_symbol) {
+                if (!fn_symbol->proto) {
+                    _semantic_error("redeclaration of function '%.*s' at line %d",
+                        (i32)fn->name.str.len, fn->name.str.s, fn->name.line);
+                    return NULL;
+                }
             }
 
-            _add_function(fn->name, node);
+            _add_function(fn->name, node, fn->body == NULL);
 
             // Check parameter names for duplicates
             // for (usize i = 0; i < fn->parameters.count; ++i) {
