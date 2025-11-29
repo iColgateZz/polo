@@ -274,7 +274,7 @@ AstNode *_check_node(AstNode *node) {
 
                     if (!_token_eq(param_a->name, param_b->name)) {
                         _semantic_error("name of parameter '%.*s' of function '%.*s' at line %d "
-                                        "does not match the name of paramater '%.*s' at line %d",
+                                        "does not match the name of parameter '%.*s' at line %d",
                             (i32)param_a->name.str.len, param_a->name.str.s,
                             (i32)fn->name.str.len, fn->name.str.s, fn->name.line,
                             (i32)param_b->name.str.len, param_b->name.str.s,
@@ -423,9 +423,9 @@ AstNode *_check_node(AstNode *node) {
         case AST_ASSIGN_EXPR: {
             AssignExprNode *assign = (AssignExprNode *)node;
             AstNode *rhs_type = _check_node(assign->value);
-            no_panic(NULL);
+            no_panic(rhs_type);
             AstNode *lhs_type = _check_node(assign->lvalue);
-            no_panic(NULL);
+            no_panic(lhs_type);
 
             if (lhs_type->ast_type != AST_IDENTIFIER) {
                 _semantic_error("cannot assign to an expression");
@@ -443,9 +443,9 @@ AstNode *_check_node(AstNode *node) {
         case AST_BINARY_EXPR: {
             BinaryExprNode *bin = (BinaryExprNode *)node;
             AstNode *left_type = _check_node(bin->left);
-            no_panic(NULL);
+            no_panic(left_type);
             AstNode *right_type = _check_node(bin->right);
-            no_panic(NULL);
+            no_panic(right_type);
 
             if (!_types_compatible(left_type, right_type)) {
                 _semantic_error("type mismatch in binary expression '%.*s' at line %d",
@@ -496,7 +496,7 @@ AstNode *_check_node(AstNode *node) {
         case AST_UNARY_EXPR: {
             UnaryExprNode *un = (UnaryExprNode *)node;
             AstNode *operand_type = _check_node(un->operand);
-            no_panic(NULL);
+            no_panic(operand_type);
 
             if (!_any_type(operand_type, 2, AST_TYPE_BOOL, AST_LITERAL_BOOL)
                 && un->op_token.type == TOKEN_BANG) {
@@ -518,7 +518,7 @@ AstNode *_check_node(AstNode *node) {
         case AST_PAREN_EXPR: {
             ParenExprNode *paren = (ParenExprNode *)node;
             AstNode *expr_type = _check_node(paren->expression);
-            no_panic(NULL);
+            no_panic(expr_type);
             return expr_type;
         }
 
