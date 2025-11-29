@@ -2,6 +2,14 @@ num a = 5;
 num b = 3;
 
 num func(num a, num a);
+num func(num a, num b);
+num func(num a, num b);
+num func(num a, num a);
+
+num func(num a, num b) {
+    num c;
+    num d;
+}
 
 num func(num a, num b) {
     num c;
@@ -13,7 +21,6 @@ num x = func(a, b) + 15;
 // comment
 
 // todo
-// check parameters
 // check arguments
 // check their types
 // when calling a function, check argnum and types

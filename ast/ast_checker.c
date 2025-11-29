@@ -90,6 +90,7 @@ typedef struct {
     Token name;
     AstNode *decl;
     b32 proto;
+    usize idx;
 } FunctionSymbol;
 
 typedef struct {
@@ -112,8 +113,13 @@ static FunctionSymbol *_lookup_function(Token name) {
     return NULL;
 }
 
-static void _add_function(Token name, AstNode *decl, b32 proto) {
-    FunctionSymbol s = {.name = name, .decl = decl, .proto = proto};
+static void _add_function(Token name, AstNode *decl, b32 proto, isize idx) {
+    if (idx >= 0) {
+        global_functions.items[idx].proto = proto;
+        return;
+    }
+    idx = global_functions.count;
+    FunctionSymbol s = {.name = name, .decl = decl, .proto = proto, .idx = idx};
     da_append(&global_functions, s);
 }
 
@@ -159,17 +165,6 @@ AstNode *_check_node(AstNode *node) {
         case AST_FUNCTION_DECL: {
             FunctionDeclNode *fn = (FunctionDeclNode *)node;
 
-            FunctionSymbol *fn_symbol = _lookup_function(fn->name);
-            if (fn_symbol) {
-                if (!fn_symbol->proto) {
-                    _semantic_error("redeclaration of function '%.*s' at line %d",
-                        (i32)fn->name.str.len, fn->name.str.s, fn->name.line);
-                    return NULL;
-                }
-            }
-
-            _add_function(fn->name, node, fn->body == NULL);
-
             AstNodeArray params = ((ParameterListNode *) fn->parameters)->parameters;
             for (usize i = 0; i < params.count; ++i) {
                 ParameterNode *param_i = (ParameterNode *)params.items[i];
@@ -183,6 +178,68 @@ AstNode *_check_node(AstNode *node) {
                     }
                 }
             }
+
+            FunctionSymbol *fn_symbol = _lookup_function(fn->name);
+            if (fn_symbol) {
+                if (!fn_symbol->proto) {
+                    _semantic_error("redeclaration of function '%.*s' at line %d",
+                        (i32)fn->name.str.len, fn->name.str.s, fn->name.line);
+                    return NULL;
+                }
+            }
+
+            if (fn_symbol) {
+                FunctionDeclNode * fn_sym_decl = (FunctionDeclNode *)fn_symbol->decl;
+                AstNode *fn_sym_type = fn_sym_decl->return_type;
+                if (!_types_compatible(fn_sym_type, fn->return_type)) {
+                    _semantic_error("return type of function '%.*s' at line %d does "
+                        "not match the one defined previously at line %d",
+                        (i32)fn->name.str.len, fn->name.str.s, fn->name.line,
+                    ((PrimitiveTypeNode *)fn_sym_type)->type_token.line);
+                    return NULL;
+                }
+            }
+
+            if (fn_symbol) {
+                FunctionDeclNode * fn_sym_decl = (FunctionDeclNode *)fn_symbol->decl;
+                AstNodeArray fn_sym_params = ((ParameterListNode *)fn_sym_decl->parameters)->parameters;
+
+                if (fn_sym_params.count != params.count) {
+                    _semantic_error("number of parameters of function '%.*s' at line %d "
+                        "does not match the one defined previously at line %d",
+                        (i32)fn->name.str.len, fn->name.str.s, fn->name.line,
+                            fn_sym_decl->name.line);
+                    return NULL;
+                }
+
+                for (usize i = 0; i < params.count; ++i) {
+                    ParameterNode *param_a = (ParameterNode *)params.items[i];
+                    ParameterNode *param_b = (ParameterNode *)fn_sym_params.items[i];
+
+                    if (!_token_eq(param_a->name, param_b->name)) {
+                        _semantic_error("name of parameter '%.*s' of function '%.*s' at line %d "
+                        "does not match the name of paramater '%.*s' at line %d",
+                            (i32)param_a->name.str.len, param_a->name.str.s,
+                            (i32)fn->name.str.len, fn->name.str.s, fn->name.line,
+                            (i32)param_b->name.str.len, param_b->name.str.s,
+                             fn_sym_decl->name.line);
+                        return NULL;
+                    }
+
+                    if (!_types_compatible(param_a->type, param_b->type)) {
+                        _semantic_error("type of parameter '%.*s' of function '%.*s' at line %d "
+                        "does not match the type of parameter '%.*s' at line %d",
+                            (i32)param_a->name.str.len, param_a->name.str.s,
+                            (i32)fn->name.str.len, fn->name.str.s, fn->name.line,
+                            (i32)param_b->name.str.len, param_b->name.str.s,
+                             fn_sym_decl->name.line);
+                        return NULL;
+                    }
+                }
+            }
+
+            isize idx = fn_symbol ? fn_symbol->idx : -1;
+            _add_function(fn->name, node, fn->body == NULL, idx);
 
             if (fn->body) {
                 _check_node(fn->body);
@@ -209,6 +266,8 @@ AstNode *_check_node(AstNode *node) {
             CallExprNode *call = (CallExprNode *)node;
             IdentifierNode *callee = (IdentifierNode *)call->callee;
             // Lookup function
+            // user can use a fn, if at least a proto has been specified
+            // name, param count and types must match for fn to be used
             FunctionSymbol *fn = _lookup_function(callee->name);
             if (!fn) {
                 _semantic_error("call to undefined function '%.*s' at line %d", 
