@@ -1,19 +1,13 @@
-num a = 5;
-num b = 3;
+num d = 5;
 
 num func(num a, num b) {
-    num c;
-    num d;
-}
-
-num x = 2 + -func(a, b) * 15;
-
-bool f() {
-    bool k;
-    bool whatever;
+    bool c = (a - b) > 0;
+    num z = a + b + d;
     {
-        num cringe;
+        num e = 5;
+        num f = e + 5;
     }
+    num g = e;
 }
 
 // comment

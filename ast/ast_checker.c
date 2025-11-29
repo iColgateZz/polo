@@ -338,7 +338,6 @@ AstNode *_check_node(AstNode *node) {
                 return NULL;
             }
 
-            // arg count and types must match for fn to be used
             FunctionDeclNode *fn_decl = (FunctionDeclNode *)fn->decl;
             AstNodeArray params = ((ParameterListNode *)fn_decl->parameters)->parameters;
             if (params.count != args.count) {
@@ -352,19 +351,15 @@ AstNode *_check_node(AstNode *node) {
 
             for (usize i = 0; i < args.count; ++i) {
                 ParameterNode *param = (ParameterNode *)params.items[i];
-                IdentifierNode *arg = (IdentifierNode *)args.items[i];
-                AstNode *arg_type = _lookup_var(arg->name);
-                if (!arg_type) {
-                    _semantic_error("use of unknown variable '%.*s' at line %d",
-                        (i32)arg->name.str.len, arg->name.str.s, arg->name.line);
-                    return NULL;
-                }
+                AstNode *arg_type = _check_node(args.items[i]);
+                no_panic(arg_type);
 
                 if (!_types_compatible(param->type, arg_type)) {
-                    _semantic_error("The type of argument '%.*s' at line %d "
+                    _semantic_error("The type of argument(idx: %d) for function '%.*s' at line %d "
                                     "does not match the type of parameter '%.*s' "
                                     "of function '%.*s' at line %d", 
-                        (i32)arg->name.str.len, arg->name.str.s, arg->name.line,
+                        i, (i32)callee->name.str.len, callee->name.str.s, callee->name.line,
+                        (i32)param->name.str.len, param->name.str.s, 
                         (i32)fn_decl->name.str.len, fn_decl->name.str.s, fn_decl->name.line);
                     return NULL;
                 }
@@ -396,7 +391,7 @@ AstNode *_check_node(AstNode *node) {
 
             if (var->initializer) {
                 AstNode *init_type = _check_node(var->initializer);
-                no_panic(NULL);
+                no_panic(init_type);
                 if (!_types_compatible(var->type, init_type)) {
                     _semantic_error("type mismatch in assignment to '%.*s' at line %d",
                         (i32)var->name.str.len, var->name.str.s, var->name.line);
@@ -412,7 +407,6 @@ AstNode *_check_node(AstNode *node) {
         case AST_TYPE_STRING:
         case AST_TYPE_BOOL:
         case AST_TYPE_VOID:
-        case AST_TYPE_STRUCT:
             return node;
 
         case AST_IDENTIFIER: {
