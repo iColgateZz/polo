@@ -1,29 +1,21 @@
 num a = 5;
 num b = 3;
 
-num func(num a, num a);
-num func(num a, num b);
-num func(num a, num b);
-num func(num a, num a);
-
 num func(num a, num b) {
     num c;
     num d;
 }
 
-num func(num a, num b) {
-    num c;
-    num d;
-}
+num x = 2 + -func(a, b) * 15;
 
-num x = func(a, b) + 15;
+bool f() {
+    bool k();
+    bool whatever;
+}
 
 // comment
 
 // todo
-// check arguments
-// check their types
 // when calling a function, check argnum and types
-// check return type of a function
 // check redefinition of local variables
 // take identifiers in function decl into account

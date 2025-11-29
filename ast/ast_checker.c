@@ -9,9 +9,19 @@
 typedef struct {
     b32 error;
     b32 panic;
+    b32 in_func;
+    isize scope;
 } Checker;
 
 static Checker checker;
+
+void scope(void) {
+    checker.scope++;
+}
+
+void rm_scope(void) {
+    checker.scope--;
+}
 
 static inline
 void _init_checker(void) {
@@ -88,6 +98,45 @@ void _add_global(Token name, AstNode *type) {
 
 typedef struct {
     Token name;
+    AstNode *type;
+    isize scope;
+} LocalSymbol;
+
+typedef struct {
+    LocalSymbol *items;
+    usize count;
+    usize capacity;
+} LocalStack;
+
+static LocalStack local_symbols;
+
+static void _init_local(void) {
+    local_symbols = (LocalStack) {0};
+}
+
+static void _clear_local(void) {
+    local_symbols.count = 0;
+}
+
+static void _push_local(LocalSymbol local) {
+    da_append(&local_symbols, local);
+}
+
+static LocalSymbol _new_local(Token name, AstNode *type) {
+    return (LocalSymbol) {.name = name, .type = type, .scope = checker.scope };
+}
+
+static AstNode *_lookup_local(Token name) {
+    for (size_t i = 0; i < local_symbols.count; ++i) {
+        if (_token_eq(local_symbols.items[i].name, name) 
+            && local_symbols.items[i].scope <= checker.scope)
+            return local_symbols.items[i].type;
+    }
+    return NULL;
+}
+
+typedef struct {
+    Token name;
     AstNode *decl;
     b32 proto;
     usize idx;
@@ -137,7 +186,7 @@ AstNode *_get_type_of(AstNode *node) {
             sentinel_type.this.ast_type = AST_TYPE_BOOL;
             return (AstNode *)&sentinel_type;
         default:
-            return node; // For identifiers, you should already be returning their type
+            return node;
     }
 }
 
@@ -145,6 +194,13 @@ static inline
 b32 _types_compatible(AstNode *lhs_type, AstNode *rhs_type) {
     if (!lhs_type || !rhs_type) return false;
     return _get_type_of(lhs_type)->ast_type == _get_type_of(rhs_type)->ast_type;
+}
+
+static AstNode *_lookup_var(Token name) {
+    AstNode *local = _lookup_local(name);
+    if (local) return local;
+
+    return _lookup_global(name);
 }
 
 static
@@ -193,9 +249,9 @@ AstNode *_check_node(AstNode *node) {
                 AstNode *fn_sym_type = fn_sym_decl->return_type;
                 if (!_types_compatible(fn_sym_type, fn->return_type)) {
                     _semantic_error("return type of function '%.*s' at line %d does "
-                        "not match the one defined previously at line %d",
+                                    "not match the one defined previously at line %d",
                         (i32)fn->name.str.len, fn->name.str.s, fn->name.line,
-                    ((PrimitiveTypeNode *)fn_sym_type)->type_token.line);
+                        ((PrimitiveTypeNode *)fn_sym_type)->type_token.line);
                     return NULL;
                 }
             }
@@ -206,7 +262,7 @@ AstNode *_check_node(AstNode *node) {
 
                 if (fn_sym_params.count != params.count) {
                     _semantic_error("number of parameters of function '%.*s' at line %d "
-                        "does not match the one defined previously at line %d",
+                                    "does not match the one defined previously at line %d",
                         (i32)fn->name.str.len, fn->name.str.s, fn->name.line,
                             fn_sym_decl->name.line);
                     return NULL;
@@ -218,7 +274,7 @@ AstNode *_check_node(AstNode *node) {
 
                     if (!_token_eq(param_a->name, param_b->name)) {
                         _semantic_error("name of parameter '%.*s' of function '%.*s' at line %d "
-                        "does not match the name of paramater '%.*s' at line %d",
+                                        "does not match the name of paramater '%.*s' at line %d",
                             (i32)param_a->name.str.len, param_a->name.str.s,
                             (i32)fn->name.str.len, fn->name.str.s, fn->name.line,
                             (i32)param_b->name.str.len, param_b->name.str.s,
@@ -228,7 +284,7 @@ AstNode *_check_node(AstNode *node) {
 
                     if (!_types_compatible(param_a->type, param_b->type)) {
                         _semantic_error("type of parameter '%.*s' of function '%.*s' at line %d "
-                        "does not match the type of parameter '%.*s' at line %d",
+                                        "does not match the type of parameter '%.*s' at line %d",
                             (i32)param_a->name.str.len, param_a->name.str.s,
                             (i32)fn->name.str.len, fn->name.str.s, fn->name.line,
                             (i32)param_b->name.str.len, param_b->name.str.s,
@@ -242,7 +298,16 @@ AstNode *_check_node(AstNode *node) {
             _add_function(fn->name, node, fn->body == NULL, idx);
 
             if (fn->body) {
+                for (usize i = 0; i < params.count; ++i) {
+                    ParameterNode *param = (ParameterNode *)params.items[i];
+                    _push_local(_new_local(param->name, param->type));
+                }
+                checker.in_func = true;
+
                 _check_node(fn->body);
+
+                checker.in_func = false;
+                _clear_local();
                 no_panic(NULL);
             }
 
@@ -251,44 +316,84 @@ AstNode *_check_node(AstNode *node) {
 
         case AST_BLOCK: {
             BlockNode *block = (BlockNode *)node;
+            scope();
             for (usize i = 0; i < block->statements.count; ++i) {
                 _check_node(block->statements.items[i]);
-                no_panic(NULL);
+                if (checker.panic) goto label;
             }
+        label:
+            rm_scope();
             return NULL;
-        }
-
-        case AST_PARAMETER: {
-            return node;
         }
 
         case AST_CALL_EXPR: {
             CallExprNode *call = (CallExprNode *)node;
             IdentifierNode *callee = (IdentifierNode *)call->callee;
-            // Lookup function
-            // user can use a fn, if at least a proto has been specified
-            // name, param count and types must match for fn to be used
+            AstNodeArray args = ((ArgumentListNode *)call->arguments)->arguments;
+
             FunctionSymbol *fn = _lookup_function(callee->name);
             if (!fn) {
                 _semantic_error("call to undefined function '%.*s' at line %d", 
                     (i32)callee->name.str.len, callee->name.str.s, callee->name.line);
                 return NULL;
             }
-            // Check argument count and types
-            // ...
+
+            // arg count and types must match for fn to be used
             FunctionDeclNode *fn_decl = (FunctionDeclNode *)fn->decl;
+            AstNodeArray params = ((ParameterListNode *)fn_decl->parameters)->parameters;
+            if (params.count != args.count) {
+                _semantic_error("Number of arguments to '%.*s' at line %d "
+                                "does not match the number of parameters "
+                                "of '%.*s' at line %d", 
+                    (i32)callee->name.str.len, callee->name.str.s, callee->name.line,
+                    (i32)fn_decl->name.str.len, fn_decl->name.str.s, fn_decl->name.line);
+                return NULL;
+            }
+
+            for (usize i = 0; i < args.count; ++i) {
+                ParameterNode *param = (ParameterNode *)params.items[i];
+                IdentifierNode *arg = (IdentifierNode *)args.items[i];
+                AstNode *arg_type = _lookup_var(arg->name);
+                if (!arg_type) {
+                    _semantic_error("use of unknown variable '%.*s' at line %d",
+                        (i32)arg->name.str.len, arg->name.str.s, arg->name.line);
+                    return NULL;
+                }
+
+                if (!_types_compatible(param->type, arg_type)) {
+                    _semantic_error("The type of argument '%.*s' at line %d "
+                                    "does not match the type of parameter '%.*s' "
+                                    "of function '%.*s' at line %d", 
+                        (i32)arg->name.str.len, arg->name.str.s, arg->name.line,
+                        (i32)fn_decl->name.str.len, fn_decl->name.str.s, fn_decl->name.line);
+                    return NULL;
+                }
+            }
+
             return fn_decl->return_type;
         }
 
         case AST_VAR_DECL: {
             VarDeclNode *var = (VarDeclNode *)node;
-            if (_lookup_global(var->name)) {
-                _semantic_error("redeclaration of variable '%.*s' at line %d",
-                (i32)var->name.str.len, var->name.str.s, var->name.line);
-                return NULL;
+
+            if (!checker.in_func) {
+                if (_lookup_global(var->name)) {
+                    _semantic_error("redeclaration of global variable '%.*s' at line %d",
+                        (i32)var->name.str.len, var->name.str.s, var->name.line);
+                    return NULL;
+                }
+    
+                _add_global(var->name, var->type);
+            } else {
+                if (_lookup_local(var->name)) {
+                    _semantic_error("redeclaration of local variable '%.*s' at line %d",
+                        (i32)var->name.str.len, var->name.str.s, var->name.line);
+                    return NULL;
+                }
+
+                _push_local(_new_local(var->name, var->type));
             }
 
-            _add_global(var->name, var->type);
             if (var->initializer) {
                 AstNode *init_type = _check_node(var->initializer);
                 no_panic(NULL);
@@ -312,9 +417,9 @@ AstNode *_check_node(AstNode *node) {
 
         case AST_IDENTIFIER: {
             IdentifierNode *id = (IdentifierNode *)node;
-            AstNode *type = _lookup_global(id->name);
+            AstNode *type = _lookup_var(id->name);
             if (!type) {
-                _semantic_error("use of undefined variable '%.*s' at line %d",
+                _semantic_error("use of unknown variable '%.*s' at line %d",
                     (i32)id->name.str.len, id->name.str.s, id->name.line);
                 return NULL;
             }
@@ -433,6 +538,7 @@ b32 semantic_errors(AstNode *program) {
     _init_checker();
     _init_global();
     _init_functions();
+    _init_local();
 
     _check_node(program);
 
