@@ -9,8 +9,11 @@ num func(num a, num b) {
 num x = 2 + -func(a, b) * 15;
 
 bool f() {
-    bool k();
+    bool k;
     bool whatever;
+    {
+        num cringe;
+    }
 }
 
 // comment

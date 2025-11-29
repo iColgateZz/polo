@@ -171,8 +171,13 @@ AstNode *parse_block(void) {
     AstNodeArray stmts = {0};
 
     while (_peek().type != TOKEN_RIGHT_BRACE && !_at_end()) {
-        // For now, only allow varDecls in function bodies
-        AstNode *stmt = parse_var_decl();
+        AstNode *stmt;
+        if (_peek().type == TOKEN_LEFT_BRACE) {
+            stmt = parse_block();
+        } else {
+            stmt = parse_var_decl();
+        }
+        
         if (parser.panic) {
             parser.panic = false;
             _synchronize();
