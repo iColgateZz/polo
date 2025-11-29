@@ -6,6 +6,8 @@ num func(num a, num b) {
     {
         num e = 5;
         num f = e + 5;
+        num z = 5;
+        num n = 15 = 25;
     }
     num g = e;
 }

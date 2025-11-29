@@ -319,9 +319,8 @@ AstNode *_check_node(AstNode *node) {
             scope();
             for (usize i = 0; i < block->statements.count; ++i) {
                 _check_node(block->statements.items[i]);
-                if (checker.panic) goto label;
+                checker.panic = false;
             }
-        label:
             rm_scope();
             return NULL;
         }
