@@ -53,6 +53,7 @@ isize _store_constant(s8 str, ValueType type) {
     return res.constants.count - 1;
 }
 
+static inline
 b32 _s8_eq(s8 s1, s8 s2) {
     return s1.len == s2.len &&
         memcmp(s1.s, s2.s, s1.len) == 0;

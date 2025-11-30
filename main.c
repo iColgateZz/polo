@@ -5,6 +5,7 @@
 #include "ast/ast_checker.h"
 #include "converter/converter.h"
 #include "converter/debug.h"
+#include "converter/linker.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -33,6 +34,9 @@ i32 main(void) {
 
     ConversionResult conv_result = convert(parse_result.program);
     disassemble(conv_result, "resolved before calling 'main'");
+
+    LinkResult link_result = link(conv_result);
+    
 
     // free(source);
     // free(scan_result.tokens.items);
