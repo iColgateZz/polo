@@ -32,7 +32,7 @@ i32 main(void) {
     }
 
     ConversionResult conv_result = convert(parse_result.program);
-    disassemble(conv_result, "main");
+    disassemble(conv_result, "resolved before calling 'main'");
 
     // free(source);
     // free(scan_result.tokens.items);

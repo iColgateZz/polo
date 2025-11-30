@@ -190,11 +190,11 @@ void _convert(AstNode *node) {
                 info.in_func = true;
     
                 _convert(fn->body);
-    
-                info.in_func = false;
-                _clear_local();
-    
                 _append_i(iRestore);
+    
+                _clear_local();
+                
+                info.in_func = false;
             }
             break;
         }

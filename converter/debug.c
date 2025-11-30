@@ -8,6 +8,7 @@ static inline usize _disassemble_instruction(ConversionResult result, usize offs
 static inline usize _global_instruction(Instruction i, usize offset, ConversionResult result);
 static inline usize _const(Instruction i, usize offset, ConversionResult result);
 static inline usize _local_instruction(Instruction i, usize offset, ConversionResult result);
+static inline usize _call_instruction(usize offset, ConversionResult result);
 
 #define instruction_size 1
 
@@ -58,9 +59,10 @@ usize _disassemble_instruction(ConversionResult result, usize offset) {
 
         case iStore_Local:
         case iLoad_Local:
-        case iCall:
             return _local_instruction(instruction, offset, result);
-
+        
+        case iCall:
+            return _call_instruction(offset, result);
         default: UNREACHABLE();
     }
 }
@@ -123,5 +125,13 @@ usize _local_instruction(Instruction i, usize offset, ConversionResult result) {
     }
 
     printf("%ld\n", idx);
+    return offset + 2 * instruction_size;
+}
+
+static inline
+usize _call_instruction(usize offset, ConversionResult result) {
+    usize idx = result.instructions.items[offset + instruction_size];
+    s8 fn_name = result.functions.items[idx].name.str;
+    printf("iCall %.*s\n", (i32)fn_name.len, fn_name.s);
     return offset + 2 * instruction_size;
 }
