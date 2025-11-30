@@ -27,6 +27,6 @@ Number num_sub(Number n1, Number n2);
 Number num_mul(Number n1, Number n2);
 Number num_div(Number n1, Number n2);
 
-void pri32_num(Number n);
+void print_num(Number n);
 
 #endif

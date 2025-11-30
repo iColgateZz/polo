@@ -60,15 +60,6 @@ Number num_div(Number n1, Number n2) {
                              : new_num_float(_get_as_f64(n1) / _get_as_f64(n2));
 }
 
-#define num_compute(n1, n2, oper) \
-    (                             \
-        Number _a = (n1),        \
-        Number _b = (n2),        \
-        _both_i32(_a, _b) ?       \
-            new_num_int(_get_i32(_a) oper _get_i32(_b)) : \
-            new_num_float(_get_as_f64(_a) oper _get_as_f64(_b)) \
-    )
-
 void print_num(Number n) {
     if (_get_type(n) == NUM_INT) {
         printf("i32: %d\n", _get_i32(n));
