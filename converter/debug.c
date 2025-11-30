@@ -63,7 +63,7 @@ usize _simple_instruction(byte *name, usize offset) {
 static inline
 usize _const(Instruction i, usize offset, ConversionResult result) {
     usize idx = result.instructions.items[offset + instruction_size];
-    s8 str = result.constants.items[idx];
+    s8 str = result.debug_constants.items[idx];
     switch (i) {
         case iPush_Num:  printf("iPush_Num ");  break;
         case iPush_Str:  printf("iPush_Str ");  break;
@@ -78,7 +78,7 @@ usize _const(Instruction i, usize offset, ConversionResult result) {
 static inline
 usize _double_instruction(Instruction i, usize offset, ConversionResult result) {
     usize idx = result.instructions.items[offset + instruction_size];
-    s8 str = result.globals.items[idx];
+    s8 str = result.debug_globals.items[idx];
     switch (i) {
         case iStore_Global: printf("iStore_Global "); break;
         case iLoad_Global:  printf("iLoad_Global ");  break;

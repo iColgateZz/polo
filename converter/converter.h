@@ -8,8 +8,8 @@
 
 typedef struct {
     InstructionSet instructions;
-    s8Array globals;
-    s8Array constants;
+    s8Array debug_globals;
+    s8Array debug_constants;
 } ConversionResult;
 
 ConversionResult convert(AstNode *program);

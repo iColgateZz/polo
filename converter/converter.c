@@ -13,13 +13,13 @@ void _init_converter(void) {
 }
 
 usize _store_global(s8 str) {
-    da_append(&res.globals, str);
-    return res.globals.count - 1;
+    da_append(&res.debug_globals, str);
+    return res.debug_globals.count - 1;
 }
 
 usize _store_constant(s8 str) {
-    da_append(&res.constants, str);
-    return res.constants.count - 1;
+    da_append(&res.debug_constants, str);
+    return res.debug_constants.count - 1;
 }
 
 b32 _s8_eq(s8 s1, s8 s2) {
@@ -28,8 +28,8 @@ b32 _s8_eq(s8 s1, s8 s2) {
 }
 
 usize _find_global(s8 str) {
-    for (usize i = 0; i < res.globals.count; ++i) {
-        if (_s8_eq(res.globals.items[i], str)) return i;
+    for (usize i = 0; i < res.debug_globals.count; ++i) {
+        if (_s8_eq(res.debug_globals.items[i], str)) return i;
     }
 
     UNREACHABLE();
