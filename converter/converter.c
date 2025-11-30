@@ -60,9 +60,7 @@ b32 _s8_eq(s8 s1, s8 s2) {
 }
 
 isize _find_global(s8 str) {
-    printf("looking for %.*s\n", (i32)str.len, str.s);
     for (usize i = 0; i < res.globals.count; ++i) {
-        printf("%.*s\n", (i32)res.globals.items[i].len, res.globals.items[i].s);
         if (_s8_eq(res.globals.items[i], str)) return i;
     }
 

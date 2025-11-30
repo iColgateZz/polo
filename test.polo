@@ -1,11 +1,3 @@
-num func(num a, num b);
-
-num func(num a, num b) {
-    // num c;
-    {
-        num c;
-    }
-    num c;
-    num d;
+num factorial(n) {
+    
 }
-num a = 5 + func(5, 2);

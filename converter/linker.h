@@ -12,5 +12,6 @@ typedef struct {
 } LinkResult;
 
 LinkResult link(ConversionResult);
+void print_link(LinkResult res);
 
 #endif

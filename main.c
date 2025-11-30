@@ -36,7 +36,11 @@ i32 main(void) {
     disassemble(conv_result, "resolved before calling 'main'");
 
     LinkResult link_result = link(conv_result);
-    
+    if (link_result.error) {
+        return -1;
+    }
+
+    print_link(link_result);
 
     // free(source);
     // free(scan_result.tokens.items);

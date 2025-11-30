@@ -3,6 +3,8 @@
 #include "types.h"
 #include "macros.h"
 #include "s8.h"
+#include <stdio.h>
+#include <stdarg.h>
 
 typedef struct {
     usize *items;
@@ -98,6 +100,7 @@ static usize dfs_link_function(
     set_address(*use_arr, fn_idx, start_address);
 
     usize i = 0;
+    usize to_ret = 0;
     while (i < fn->instructions.count) {
         Instruction instr = fn->instructions.items[i];
         instructions->items[write_head++] = instr;
@@ -112,6 +115,9 @@ static usize dfs_link_function(
                 callee_idx, conv, use_arr, instructions, write_head
             );
 
+            if (callee_addr > to_ret) 
+                to_ret = callee_addr;
+
             // Write the callee's address as the operand
             instructions->items[write_head++] = callee_addr;
         } else if (has_arg(instr)) {
@@ -122,7 +128,7 @@ static usize dfs_link_function(
     }
 
     // Return the new write_head (end address after this function)
-    return write_head;
+    return write_head > to_ret ? write_head : to_ret;
 }
 
 LinkResult link(ConversionResult conv) {
@@ -135,8 +141,8 @@ LinkResult link(ConversionResult conv) {
         instructions_len += conv.functions.items[i].instructions.count;
 
         if (conv.functions.items[i].instructions.count == 0) {
-            _linker_error("function '%.*s' is not provided"
-                          "Last time mentioned at line %d",
+            _linker_error("function '%.*s' is not provided. "
+                          "Prototype mentioned at line %d",
                 (i32)conv.functions.items[i].name.str.len, 
                 conv.functions.items[i].name.str.s, 
                 conv.functions.items[i].name.line);
@@ -165,8 +171,11 @@ LinkResult link(ConversionResult conv) {
         _linker_error("function 'main' not found");
         return (LinkResult) { .error = true };
     }
-
-    dfs_link_function(main_idx, &conv, &use_arr, &instructions, 0);
+    
+    for (usize i = 0; i < conv.functions.count; ++i) {
+        usize last = dfs_link_function(i, &conv, &use_arr, &instructions, instructions.count);
+        instructions.count = last;
+    }
 
     for (usize i = 0; i < conv.instructions.count; ++i) {
         Instruction instr = conv.instructions.items[i];
@@ -182,14 +191,69 @@ LinkResult link(ConversionResult conv) {
     }
 
     // Override iHalt
-    instructions.items[instructions.count - 1] = iCall;
+    instructions.items[instructions.count - 1] = iSave;
     // Call main
-    da_append(&instructions, 0);
+    da_append(&instructions, iCall);
+    da_append(&instructions, get_address(use_arr, main_idx));
     da_append(&instructions, iHalt);
 
     return (LinkResult) { .constants = conv.constants, .instructions = instructions };
 }
 
+void _print_instr(Instruction instr) {
+    switch (instr) {
+    case iPush_Num:      printf("iPush_Num");      break;
+    case iPush_Str:      printf("iPush_Str");      break;
+    case iPush_Bool:     printf("iPush_Bool");     break;
+    case iPop:           printf("iPop");           break;
+
+    case iStore_Global:  printf("iStore_Global");  break;
+    case iLoad_Global:   printf("iLoad_Global");   break;
+    case iStore_Local:   printf("iStore_Local");   break;
+    case iLoad_Local:    printf("iLoad_Local");    break;
+
+    case iAdd:           printf("iAdd");           break;
+    case iSub:           printf("iSub");           break;
+    case iMul:           printf("iMul");           break;
+    case iDiv:           printf("iDiv");           break;
+    case iNeg:           printf("iNeg");           break;
+
+    case iAnd:           printf("iAnd");           break;
+    case iOr:            printf("iOr");            break;
+    case iNot:           printf("iNot");           break;
+
+    case iEq:            printf("iEq");            break;
+    case iNeq:           printf("iNeq");           break;
+    case iLt:            printf("iLt");            break;
+    case iLte:           printf("iLte");           break;
+    case iGt:            printf("iGt");            break;
+    case iGte:           printf("iGte");           break;
+
+    case iHalt:          printf("iHalt");          break;
+
+    case iReturn:        printf("iReturn");        break;
+    case iCall:          printf("iCall");          break;
+    case iRestore:       printf("iRestore");       break;
+    case iSave:          printf("iSave");          break;
+
+    default:
+        printf("UNKNOWN_INSTRUCTION");
+        break;
+    }
+}
+
 void print_link(LinkResult res) {
-    
+    printf("== After linking ==\n");
+
+    for (usize i = 0; i < res.instructions.count; ++i) {
+        Instruction instr = res.instructions.items[i];
+        printf("%04zu ", i);
+        _print_instr(instr);
+
+        if (instr == iCall || has_arg(instr)) {
+            usize arg = res.instructions.items[++i];
+            printf(" %zu", arg);
+        }
+        printf("\n");
+    }
 }
