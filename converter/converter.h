@@ -8,8 +8,7 @@
 
 typedef struct {
     Token name;
-    isize offset;
-    b32 unknown;
+    InstructionSet instructions;
 } FunctionSymbol;
 
 typedef struct {

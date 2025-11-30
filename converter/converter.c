@@ -89,6 +89,7 @@ typedef struct {
     LocalStack locals;
     isize scope;
     b32 in_func;
+    usize fn_idx;
 } Info;
 
 static Info info;
@@ -137,17 +138,28 @@ static usize _lookup_function(Token name) {
     UNREACHABLE();
 }
 
-static void _add_function(Token name, b32 unknown, isize offset) {
-    FunctionSymbol s = {.name = name, .unknown = unknown, .offset = offset};
+static usize _add_function(Token name) {
+    FunctionSymbol s = {.name = name };
     for (usize i = 0; i < res.functions.count; ++i) {
         if (_token_eq(res.functions.items[i].name, name)) {
-            res.functions.items[i] = s;
-            return;
+            if (res.functions.items[i].instructions.count == 0) {
+                res.functions.items[i] = s;
+            }
+            return i;
         }
     }
 
     da_append(&res.functions, s);
-    return;
+    return res.functions.count - 1;
+}
+
+static void _append_i(usize i) {
+    if (info.in_func) {
+        InstructionSet *set = &res.functions.items[info.fn_idx].instructions;
+        da_append(set, i);
+    } else {
+        da_append(&res.instructions, i);
+    }
 }
 
 void _convert(AstNode *node) {
@@ -159,14 +171,14 @@ void _convert(AstNode *node) {
             for (usize i = 0; i < n->declarations.count; ++i) {
                 _convert(n->declarations.items[i]);
             }
-            da_append(&res.instructions, iHalt);
+            _append_i(iHalt);
             break;
         }
 
         case AST_FUNCTION_DECL: {
             FunctionDeclNode *fn = (FunctionDeclNode *)node;
 
-            _add_function(fn->name, fn->body == NULL, res.instructions.count);
+            info.fn_idx = _add_function(fn->name);
 
             AstNodeArray params = ((ParameterListNode *)fn->parameters)->parameters;
             for (usize i = 0; i < params.count; ++i) {
@@ -182,7 +194,7 @@ void _convert(AstNode *node) {
                 info.in_func = false;
                 _clear_local();
     
-                da_append(&res.instructions, iRestore);
+                _append_i(iRestore);
             }
             break;
         }
@@ -201,15 +213,15 @@ void _convert(AstNode *node) {
             IdentifierNode *callee = (IdentifierNode *)call->callee;
             AstNodeArray args = ((ArgumentListNode *)call->arguments)->arguments;
 
-            da_append(&res.instructions, iSave);
+            _append_i(iSave);
 
             for (usize i = 0; i < args.count; ++i)
                 _convert(args.items[i]);
 
             usize offset = _lookup_function(callee->name);
 
-            da_append(&res.instructions, iCall);
-            da_append(&res.instructions, offset);
+            _append_i(iCall);
+            _append_i(offset);
 
             break;
         }
@@ -222,25 +234,25 @@ void _convert(AstNode *node) {
             } else {
                 PrimitiveTypeNode *type = (PrimitiveTypeNode *)var->type;
                 if (type->this.ast_type == AST_TYPE_NUM) {
-                    da_append(&res.instructions, iPush_Num);
-                    da_append(&res.instructions, _store_constant(s8("0"), VAL_NUM));
+                    _append_i(iPush_Num);
+                    _append_i(_store_constant(s8("0"), VAL_NUM));
                 } else if (type->this.ast_type == AST_TYPE_BOOL) {
-                    da_append(&res.instructions, iPush_Bool);
-                    da_append(&res.instructions, _store_constant(s8("false"), VAL_BOOL));
+                    _append_i(iPush_Bool);
+                    _append_i(_store_constant(s8("false"), VAL_BOOL));
                 } else if (type->this.ast_type == AST_TYPE_STRING) {
-                    da_append(&res.instructions, iPush_Str);
-                    da_append(&res.instructions, _store_constant(s8(""), VAL_STR));
+                    _append_i(iPush_Str);
+                    _append_i(_store_constant(s8(""), VAL_STR));
                 }
             }
 
             if (info.in_func) {
                 isize local_idx = _push_local(_new_local(var->name));
-                da_append(&res.instructions, iStore_Local);
-                da_append(&res.instructions, local_idx);
+                _append_i(iStore_Local);
+                _append_i(local_idx);
             } else {
                 isize global_idx = _store_global(var->name.str);
-                da_append(&res.instructions, iStore_Global);
-                da_append(&res.instructions, global_idx);
+                _append_i(iStore_Global);
+                _append_i(global_idx);
             }
 
             break;
@@ -248,22 +260,22 @@ void _convert(AstNode *node) {
 
         case AST_LITERAL_NUMBER: {
             NumberLiteralNode *n = (NumberLiteralNode *)node;
-            da_append(&res.instructions, iPush_Num);
-            da_append(&res.instructions, _store_constant(n->value.str, VAL_NUM));
+            _append_i(iPush_Num);
+            _append_i(_store_constant(n->value.str, VAL_NUM));
             break;
         }
 
         case AST_LITERAL_STRING: {
             StringLiteralNode *n = (StringLiteralNode *)node;
-            da_append(&res.instructions, iPush_Str);
-            da_append(&res.instructions, _store_constant(n->value.str, VAL_STR));
+            _append_i(iPush_Str);
+            _append_i(_store_constant(n->value.str, VAL_STR));
             break;
         }
 
         case AST_LITERAL_BOOL: {
             BoolLiteralNode *n = (BoolLiteralNode *)node;
-            da_append(&res.instructions, iPush_Bool);
-            da_append(&res.instructions, _store_constant(n->token.str, VAL_BOOL));
+            _append_i(iPush_Bool);
+            _append_i(_store_constant(n->token.str, VAL_BOOL));
             break;
         }
 
@@ -271,12 +283,12 @@ void _convert(AstNode *node) {
             IdentifierNode *id = (IdentifierNode *)node;
             isize local_idx = _lookup_local(id->name);
             if (local_idx >= 0) {
-                da_append(&res.instructions, iLoad_Local);
-                da_append(&res.instructions, local_idx);
+                _append_i(iLoad_Local);
+                _append_i(local_idx);
             } else {
                 usize global_idx = _find_global(id->name.str);
-                da_append(&res.instructions, iLoad_Global);
-                da_append(&res.instructions, global_idx);
+                _append_i(iLoad_Global);
+                _append_i(global_idx);
             }
             break;
         }
@@ -288,16 +300,16 @@ void _convert(AstNode *node) {
             IdentifierNode *id = (IdentifierNode *)assign->lvalue;
             isize local_idx = _lookup_local(id->name);
             if (local_idx >= 0) {
-                da_append(&res.instructions, iStore_Local);
-                da_append(&res.instructions, local_idx);
-                da_append(&res.instructions, iLoad_Local);
-                da_append(&res.instructions, local_idx);
+                _append_i(iStore_Local);
+                _append_i(local_idx);
+                _append_i(iLoad_Local);
+                _append_i(local_idx);
             } else {
                 usize global_idx = _find_global(id->name.str);
-                da_append(&res.instructions, iStore_Global);
-                da_append(&res.instructions, global_idx);
-                da_append(&res.instructions, iLoad_Global);
-                da_append(&res.instructions, global_idx);
+                _append_i(iStore_Global);
+                _append_i(global_idx);
+                _append_i(iLoad_Global);
+                _append_i(global_idx);
             }
             break;
         }
@@ -308,18 +320,18 @@ void _convert(AstNode *node) {
             _convert(bin->right);
 
             switch (bin->op_token.type) {
-                case TOKEN_PLUS:          da_append(&res.instructions, iAdd);  break;
-                case TOKEN_MINUS:         da_append(&res.instructions, iSub);  break;
-                case TOKEN_STAR:          da_append(&res.instructions, iMul);  break;
-                case TOKEN_SLASH:         da_append(&res.instructions, iDiv);  break;
-                case TOKEN_AND:           da_append(&res.instructions, iAnd);  break;
-                case TOKEN_OR:            da_append(&res.instructions, iOr);   break;
-                case TOKEN_EQUAL_EQUAL:   da_append(&res.instructions, iEq);   break;
-                case TOKEN_BANG_EQUAL:    da_append(&res.instructions, iNeq);  break;
-                case TOKEN_GREATER:       da_append(&res.instructions, iGt);   break;
-                case TOKEN_GREATER_EQUAL: da_append(&res.instructions, iGte);  break;
-                case TOKEN_LESS:          da_append(&res.instructions, iLt);   break;
-                case TOKEN_LESS_EQUAL:    da_append(&res.instructions, iLte);  break;
+                case TOKEN_PLUS:          _append_i(iAdd);  break;
+                case TOKEN_MINUS:         _append_i(iSub);  break;
+                case TOKEN_STAR:          _append_i(iMul);  break;
+                case TOKEN_SLASH:         _append_i(iDiv);  break;
+                case TOKEN_AND:           _append_i(iAnd);  break;
+                case TOKEN_OR:            _append_i(iOr);   break;
+                case TOKEN_EQUAL_EQUAL:   _append_i(iEq);   break;
+                case TOKEN_BANG_EQUAL:    _append_i(iNeq);  break;
+                case TOKEN_GREATER:       _append_i(iGt);   break;
+                case TOKEN_GREATER_EQUAL: _append_i(iGte);  break;
+                case TOKEN_LESS:          _append_i(iLt);   break;
+                case TOKEN_LESS_EQUAL:    _append_i(iLte);  break;
                 default: UNREACHABLE();
             }
             break;
@@ -330,8 +342,8 @@ void _convert(AstNode *node) {
             _convert(un->operand);
 
             switch (un->op_token.type) {
-                case TOKEN_BANG:  da_append(&res.instructions, iNot); break;
-                case TOKEN_MINUS: da_append(&res.instructions, iNeg); break;
+                case TOKEN_BANG:  _append_i(iNot); break;
+                case TOKEN_MINUS: _append_i(iNeg); break;
                 default: UNREACHABLE();
             }
             break;
