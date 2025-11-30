@@ -9,6 +9,7 @@
 typedef struct {
     Token name;
     InstructionSet instructions;
+    usize address;
 } FunctionSymbol;
 
 typedef struct {

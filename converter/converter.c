@@ -138,8 +138,8 @@ static usize _lookup_function(Token name) {
     UNREACHABLE();
 }
 
-static usize _add_function(Token name) {
-    FunctionSymbol s = {.name = name };
+static usize _add_function(Token name, usize address) {
+    FunctionSymbol s = {.name = name, .address = address};
     for (usize i = 0; i < res.functions.count; ++i) {
         if (_token_eq(res.functions.items[i].name, name)) {
             if (res.functions.items[i].instructions.count == 0) {
@@ -178,15 +178,15 @@ void _convert(AstNode *node) {
         case AST_FUNCTION_DECL: {
             FunctionDeclNode *fn = (FunctionDeclNode *)node;
 
-            info.fn_idx = _add_function(fn->name);
+            info.fn_idx = _add_function(fn->name, res.instructions.count);
 
-            AstNodeArray params = ((ParameterListNode *)fn->parameters)->parameters;
-            for (usize i = 0; i < params.count; ++i) {
-                ParameterNode *param = (ParameterNode *)params.items[i];
-                _push_local(_new_local(param->name));
-            }
-
+            
             if (fn->body) {
+                AstNodeArray params = ((ParameterListNode *)fn->parameters)->parameters;
+                for (usize i = 0; i < params.count; ++i) {
+                    ParameterNode *param = (ParameterNode *)params.items[i];
+                    _push_local(_new_local(param->name));
+                }
                 info.in_func = true;
     
                 _convert(fn->body);
@@ -202,8 +202,10 @@ void _convert(AstNode *node) {
         case AST_BLOCK: {
             BlockNode *block = (BlockNode *)node;
             scope();
+            usize old_count = info.locals.count;
             for (usize i = 0; i < block->statements.count; ++i)
                 _convert(block->statements.items[i]);
+            info.locals.count = old_count;
             rm_scope();
             break;
         }

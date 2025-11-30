@@ -4,26 +4,35 @@
 #include "macros.h"
 
 static inline usize _simple_instruction(byte *name, usize offset);
-static inline usize _disassemble_instruction(ConversionResult result, usize offset);
-static inline usize _global_instruction(Instruction i, usize offset, ConversionResult result);
-static inline usize _const(Instruction i, usize offset, ConversionResult result);
-static inline usize _local_instruction(Instruction i, usize offset, ConversionResult result);
-static inline usize _call_instruction(usize offset, ConversionResult result);
+static inline usize _disassemble_instruction(InstructionSet *instructions, ConversionResult result, usize offset);
+static inline usize _global_instruction(Instruction i, usize offset, ConversionResult result, InstructionSet *instructions);
+static inline usize _const(Instruction i, usize offset, ConversionResult result, InstructionSet *instructions);
+static inline usize _local_instruction(Instruction i, usize offset, InstructionSet *instructions);
+static inline usize _call_instruction(usize offset, ConversionResult result, InstructionSet *instructions);
 
 #define instruction_size 1
 
-void disassemble(ConversionResult result, byte *set_name) {
+static void _disassemble_set(InstructionSet *instructions, ConversionResult result, const char *set_name) {
     printf("== %s ==\n", set_name);
 
-    for (usize offset = 0; offset < result.instructions.count;)
-        offset = _disassemble_instruction(result, offset);
+    for (usize offset = 0; offset < instructions->count;)
+        offset = _disassemble_instruction(instructions, result, offset);
+}
+
+void disassemble(ConversionResult result, byte *set_name) {
+    _disassemble_set(&result.instructions, result, (const char *)set_name);
+
+    for (usize i = 0; i < result.functions.count; ++i) {
+        FunctionSymbol *fn = &result.functions.items[i];
+        char fn_label[256];
+        snprintf(fn_label, sizeof(fn_label), "function %.*s", (int)fn->name.str.len, fn->name.str.s);
+        _disassemble_set(&fn->instructions, result, fn_label);
+    }
 }
 
 static inline
-usize _disassemble_instruction(ConversionResult result, usize offset) {
-    printf("%04zu ", offset);
-
-    Instruction instruction = result.instructions.items[offset];
+usize _disassemble_instruction(InstructionSet *instructions, ConversionResult result, usize offset) {
+    Instruction instruction = instructions->items[offset];
     switch (instruction) {
         case iReturn:   return _simple_instruction("iReturn", offset);
 
@@ -51,18 +60,19 @@ usize _disassemble_instruction(ConversionResult result, usize offset) {
         case iPush_Num:
         case iPush_Str:
         case iPush_Bool:
-            return _const(instruction, offset, result);
+            return _const(instruction, offset, result, instructions);
 
         case iStore_Global:
         case iLoad_Global:
-            return _global_instruction(instruction, offset, result);
+            return _global_instruction(instruction, offset, result, instructions);
 
         case iStore_Local:
         case iLoad_Local:
-            return _local_instruction(instruction, offset, result);
-        
+            return _local_instruction(instruction, offset, instructions);
+
         case iCall:
-            return _call_instruction(offset, result);
+            return _call_instruction(offset, result, instructions);
+
         default: UNREACHABLE();
     }
 }
@@ -74,8 +84,8 @@ usize _simple_instruction(byte *name, usize offset) {
 }
 
 static inline
-usize _const(Instruction i, usize offset, ConversionResult result) {
-    usize idx = result.instructions.items[offset + instruction_size];
+usize _const(Instruction i, usize offset, ConversionResult result, InstructionSet *instructions) {
+    usize idx = instructions->items[offset + instruction_size];
     Value value = result.constants.items[idx];
     switch (i) {
         case iPush_Num:  printf("iPush_Num ");  break;
@@ -101,8 +111,8 @@ usize _const(Instruction i, usize offset, ConversionResult result) {
 }
 
 static inline
-usize _global_instruction(Instruction i, usize offset, ConversionResult result) {
-    usize idx = result.instructions.items[offset + instruction_size];
+usize _global_instruction(Instruction i, usize offset, ConversionResult result, InstructionSet *instructions) {
+    usize idx = instructions->items[offset + instruction_size];
     s8 str = result.globals.items[idx];
     switch (i) {
         case iStore_Global: printf("iStore_Global "); break;
@@ -115,12 +125,11 @@ usize _global_instruction(Instruction i, usize offset, ConversionResult result) 
 }
 
 static inline
-usize _local_instruction(Instruction i, usize offset, ConversionResult result) {
-    isize idx = result.instructions.items[offset + instruction_size];
+usize _local_instruction(Instruction i, usize offset, InstructionSet *instructions) {
+    isize idx = instructions->items[offset + instruction_size];
     switch (i) {
         case iStore_Local: printf("iStore_Local "); break;
         case iLoad_Local:  printf("iLoad_Local ");  break;
-        case iCall:        printf("iCall ");  break;
         default: UNREACHABLE();
     }
 
@@ -129,8 +138,8 @@ usize _local_instruction(Instruction i, usize offset, ConversionResult result) {
 }
 
 static inline
-usize _call_instruction(usize offset, ConversionResult result) {
-    usize idx = result.instructions.items[offset + instruction_size];
+usize _call_instruction(usize offset, ConversionResult result, InstructionSet *instructions) {
+    usize idx = instructions->items[offset + instruction_size];
     s8 fn_name = result.functions.items[idx].name.str;
     printf("iCall %.*s\n", (i32)fn_name.len, fn_name.s);
     return offset + 2 * instruction_size;
