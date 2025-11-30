@@ -459,8 +459,7 @@ AstNode *_check_node(AstNode *node) {
                 case TOKEN_MINUS:
                 case TOKEN_STAR:
                 case TOKEN_SLASH:
-                    // operations only defined for numbers
-                    // they produce a number
+                    // num, num -> num
                     if (!_any_type(left_type, 2, AST_TYPE_NUM, AST_LITERAL_NUMBER)) {
                         _semantic_error("Operation '%.*s' is only defined for numbers. Error at line %d",
                             (i32)bin->op_token.str.len, bin->op_token.str.s, bin->op_token.line);
@@ -468,21 +467,39 @@ AstNode *_check_node(AstNode *node) {
                     }
                     break;
 
-                case TOKEN_AND:
-                case TOKEN_OR:
-                case TOKEN_EQUAL_EQUAL:
-                case TOKEN_BANG_EQUAL:
                 case TOKEN_GREATER:
                 case TOKEN_GREATER_EQUAL:
                 case TOKEN_LESS:
                 case TOKEN_LESS_EQUAL:
-                    // operations defined for numbers and booleans
-                    // operations produce a boolean value
+                    // num, num -> bool
+                    if (!_any_type(left_type, 2, AST_TYPE_NUM, AST_LITERAL_NUMBER)) {
+                        _semantic_error("Operation '%.*s' is only defined for numbers. Error at line %d",
+                            (i32)bin->op_token.str.len, bin->op_token.str.s, bin->op_token.line);
+                        return NULL;
+                    }
+                    // enforce bool type
+                    sentinel_type.this.ast_type = AST_TYPE_BOOL;
+                    return (AstNode *)&sentinel_type;
+
+                case TOKEN_AND:
+                case TOKEN_OR:
+                    // bool, bool -> bool
+                    if (!_any_type(left_type, 2, AST_TYPE_BOOL, AST_LITERAL_BOOL)) {
+                        _semantic_error("Operation '%.*s' is only defined for booleans. Error at line %d",
+                            (i32)bin->op_token.str.len, bin->op_token.str.s, bin->op_token.line);
+                        return NULL;
+                    }
+                    break;
+
+                case TOKEN_EQUAL_EQUAL:
+                case TOKEN_BANG_EQUAL:
+                    // num, num -> bool or bool, bool -> bool
                     if (!_any_type(left_type, 4, AST_TYPE_NUM, AST_LITERAL_NUMBER, AST_TYPE_BOOL, AST_LITERAL_BOOL)) {
                         _semantic_error("Operation '%.*s' is only defined for numbers and booleans. Error at line %d",
                             (i32)bin->op_token.str.len, bin->op_token.str.s, bin->op_token.line);
                         return NULL;
                     }
+                    // enforce bool type
                     sentinel_type.this.ast_type = AST_TYPE_BOOL;
                     return (AstNode *)&sentinel_type;
 

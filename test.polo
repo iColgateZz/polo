@@ -1,5 +1,5 @@
 num d = 5;
-string c = "what?"
+string c = "what?";
 
 num func(num a, num b) {
     bool c = (a - b) > 0;

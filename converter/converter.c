@@ -23,7 +23,7 @@ b32 _s8_to_b32(s8 str) {
 
 Number _s8_to_num(s8 str) {
     byte buf[256];
-    usize n = str.len < sizeof(buf) - 1 ? str.len : sizeof(buf) - 1;
+    usize n = (usize)str.len < sizeof(buf) - 1 ? str.len : sizeof(buf) - 1;
     memcpy(buf, str.s, n);
     buf[n] = '\0';
 
@@ -40,13 +40,13 @@ usize _store_constant(s8 str, ValueType type) {
     da_append(&res.debug_constants, str);
 
     switch (type) {
-        case VAL_STR:  
+        case VAL_STR:
             da_append(&res.constants, new_val_str(str)); 
             break;
-        case VAL_NUM:  
+        case VAL_NUM:
             da_append(&res.constants, new_val_num(_s8_to_num(str))); 
             break;
-        case VAL_BOOL: 
+        case VAL_BOOL:
             da_append(&res.constants, new_val_bool(_s8_to_b32(str)));
             break;
     
