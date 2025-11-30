@@ -46,18 +46,6 @@ b32 _match(TokenType type) {
     return false;
 }
 
-static inline
-void _synchronize(void) {
-    // Skip tokens until we find a semicolon or EOF
-    while (!_at_end()) {
-        if (_peek().type == TOKEN_SEMICOLON) {
-            _advance(); // Go past the semicolon
-            break;
-        }
-        _advance();
-    }
-}
-
 static inline 
 AstNode *_error(byte *expected) {
     Token t = _peek();
@@ -88,6 +76,24 @@ static AstNode *parse_parameters(void);
 static AstNode *parse_block(void);
 static AstNode *parse_call(void);
 static AstNode *parse_arguments(void);
+
+static inline
+void _synchronize(void) {
+    while (!_at_end()) {
+        TokenType t = _peek().type;
+        if (t == TOKEN_SEMICOLON || t == TOKEN_RIGHT_BRACE) {
+            _advance(); // Go past the semicolon
+            break;
+        }
+
+        if (t == TOKEN_LEFT_BRACE) {
+            parse_block();
+            return;
+        }
+
+        _advance();
+    }
+}
 
 static 
 AstNode *parse_program(void) {
@@ -124,7 +130,6 @@ static AstNode *parse_fun_decl(void) {
     if (!_match(TOKEN_LEFT_PAREN))
         return _error("(");
 
-    // Function declaration or prototype
     AstNode *params = parse_parameters();
     no_panic(params);
 
@@ -187,7 +192,7 @@ AstNode *parse_block(void) {
     }
 
     if (!_match(TOKEN_RIGHT_BRACE))
-            return _error("'}'");
+            return _error("}");
 
     return new_block_node(stmts);
 }

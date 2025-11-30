@@ -1,4 +1,5 @@
 num d = 5;
+string c = "what?"
 
 num func(num a, num b) {
     bool c = (a - b) > 0;
@@ -11,10 +12,20 @@ num func(num a, num b) {
     }
     num g = e;
 }
+}
+num f(aboba a, num b) {
+    num e = a + b + c +D +qwe;
+    num f;
+    {
+        qwjeqjkldadmlq
+    }
+}
+
+nu k(num a, numb) {
+
+}
 
 // comment
 
 // todo
-// when calling a function, check argnum and types
-// check redefinition of local variables
-// take identifiers in function decl into account
+// add check for void type
