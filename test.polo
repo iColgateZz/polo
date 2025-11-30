@@ -1,8 +1,8 @@
-void func(num a, num b) {
-    void c;
+num func(num a, num b) {
+    
 }
 
-void f;
+num a = 5 + func(5, 2);
 
 // comment
 

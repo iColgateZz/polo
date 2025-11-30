@@ -1,0 +1,64 @@
+type           : baseType | "void" ;
+baseType       : "num" | "string" | "bool" ;
+
+program        : declaration* EOF ;
+
+declaration    : funDecl
+               | funProto
+               | varDecl ;
+
+funDecl        : type IDENTIFIER "(" parameters? ")" block ;
+parameters     : type IDENTIFIER ( "," type IDENTIFIER )* ;
+arguments      : expression ( "," expression )* ;
+
+funProto       : type IDENTIFIER "(" parameters? ")" ";" ;
+
+varDecl        : type IDENTIFIER ( "=" expression )? ";" ;
+
+lvalue         : IDENTIFIER ;
+
+expression     : assignment ;
+assignment     : lvalue "=" assignment
+               | logic_or ;
+logic_or       : logic_and ( "or" logic_and )* ;
+logic_and      : equality ( "and" equality )* ;
+equality       : comparison ( ( "!=" | "==" ) comparison )* ;
+comparison     : term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
+term           : factor ( ( "-" | "+" ) factor )* ;
+factor         : unary ( ( "/" | "*" ) unary )* ;
+unary          : ( "!" | "-" ) unary | call ;
+call           : primary ( "(" arguments? ")" )? ;
+primary        : literal 
+               | IDENTIFIER 
+               | "(" expression ")" ;
+
+statement      : assignStmt
+               | exprStmt
+               | forStmt
+               | ifStmt
+               | printStmt
+               | returnStmt
+               | whileStmt
+               | breakStmt
+               | contStmt
+               | block ;
+
+assignStmt     : assignment ";" ;
+exprStmt       : expression ";" ;
+forStmt        : "for" "(" ( varDecl | exprStmt | ";" )
+                           expression? ";"
+                           expression? ")" block ;
+ifStmt         : "if" "(" expression ")" block ( "elif" "(" expression ")" block )* ( "else" block )? ;
+printStmt      : "print" expression ";" ;
+returnStmt     : "return" expression? ";" ;
+whileStmt      : "while" "(" expression ")" block ;
+breakStmt      : "break" ";" ;
+contStmt       : "continue" ";" ;
+block          : "{" (statement | varDecl)* "}" ;
+
+literal        : NUMBER | STRING | "false" | "true" ;
+NUMBER         : DIGIT+ ( "." DIGIT+ )? ;
+STRING         : "\"" <any char except "\"">* "\"" ;
+IDENTIFIER     : ALPHA ( ALPHA | DIGIT )* ;
+ALPHA          : "a" ... "z" | "A" ... "Z" | "_" ;
+DIGIT          : "0" ... "9" ;
