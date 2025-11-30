@@ -63,7 +63,7 @@ usize _simple_instruction(byte *name, usize offset) {
 static inline
 usize _const(Instruction i, usize offset, ConversionResult result) {
     usize idx = result.instructions.items[offset + instruction_size];
-    s8 str = result.debug_constants.items[idx];
+    Value value = result.constants.items[idx];
     switch (i) {
         case iPush_Num:  printf("iPush_Num ");  break;
         case iPush_Str:  printf("iPush_Str ");  break;
@@ -71,7 +71,19 @@ usize _const(Instruction i, usize offset, ConversionResult result) {
         default: UNREACHABLE();
     }
 
-    printf("%.*s\n", (i32)str.len, str.s);
+    switch (value.type) {
+        case VAL_BOOL:
+            printf("%s\n", bool_str(value.bool));
+            break;
+        case VAL_STR:
+            printf("%.*s\n", (i32)value.str.len, value.str.s);
+            break;
+        case VAL_NUM:
+            print_num(value.num);
+            break;
+        
+        default: UNREACHABLE();
+    }
     return offset + 2 * instruction_size;
 }
 

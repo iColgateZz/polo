@@ -37,8 +37,6 @@ Number _s8_to_num(s8 str) {
 }
 
 usize _store_constant(s8 str, ValueType type) {
-    da_append(&res.debug_constants, str);
-
     switch (type) {
         case VAL_STR:
             da_append(&res.constants, new_val_str(str)); 
@@ -53,7 +51,7 @@ usize _store_constant(s8 str, ValueType type) {
         default: UNREACHABLE();
     }
 
-    return res.debug_constants.count - 1;
+    return res.constants.count - 1;
 }
 
 b32 _s8_eq(s8 s1, s8 s2) {

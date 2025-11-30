@@ -15,4 +15,6 @@
             exit(-1);   \
         } while (0)
 
+#define bool_str(i) ((i) ? "true" : "false")
+
 #endif
