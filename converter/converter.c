@@ -2,7 +2,7 @@
 #include "../ast/special_nodes.h"
 #include "../ast/token.h"
 #include "da.h"
-#include "string.h"
+#include <string.h>
 #include <stdio.h>
 #include "macros.h"
 
@@ -17,8 +17,42 @@ usize _store_global(s8 str) {
     return res.debug_globals.count - 1;
 }
 
-usize _store_constant(s8 str) {
+b32 _s8_to_b32(s8 str) {
+    return str.s[0] == 't';
+}
+
+Number _s8_to_num(s8 str) {
+    byte buf[256];
+    usize n = str.len < sizeof(buf) - 1 ? str.len : sizeof(buf) - 1;
+    memcpy(buf, str.s, n);
+    buf[n] = '\0';
+
+    if (strchr(buf, '.')) {
+        f64 d = strtod(buf, NULL);
+        return new_num_float(d);
+    } else {
+        i32 i = strtol(buf, NULL, 10);
+        return new_num_int(i);
+    }
+}
+
+usize _store_constant(s8 str, ValueType type) {
     da_append(&res.debug_constants, str);
+
+    switch (type) {
+        case VAL_STR:  
+            da_append(&res.constants, new_val_str(str)); 
+            break;
+        case VAL_NUM:  
+            da_append(&res.constants, new_val_num(_s8_to_num(str))); 
+            break;
+        case VAL_BOOL: 
+            da_append(&res.constants, new_val_bool(_s8_to_b32(str)));
+            break;
+    
+        default: UNREACHABLE();
+    }
+
     return res.debug_constants.count - 1;
 }
 
@@ -53,7 +87,7 @@ void _convert(AstNode *node) {
         case AST_VAR_DECL: {
             VarDeclNode *var = (VarDeclNode *)node;
             usize global_idx = _store_global(var->name.str);
-
+            
             if (var->initializer) {
                 _convert(var->initializer);
             } else {
@@ -61,13 +95,13 @@ void _convert(AstNode *node) {
                 PrimitiveTypeNode *type = (PrimitiveTypeNode *)var->type;
                 if (type->this.ast_type == AST_TYPE_NUM) {
                     da_append(&res.instructions, iPush_Num);
-                    da_append(&res.instructions, _store_constant(s8("0")));
+                    da_append(&res.instructions, _store_constant(s8("0"), VAL_NUM));
                 } else if (type->this.ast_type == AST_TYPE_BOOL) {
                     da_append(&res.instructions, iPush_Bool);
-                    da_append(&res.instructions, _store_constant(s8("false")));
+                    da_append(&res.instructions, _store_constant(s8("false"), VAL_BOOL));
                 } else if (type->this.ast_type == AST_TYPE_STRING) {
                     da_append(&res.instructions, iPush_Str);
-                    da_append(&res.instructions, _store_constant(s8("")));
+                    da_append(&res.instructions, _store_constant(s8(""), VAL_STR));
                 }
             }
             da_append(&res.instructions, iStore_Global);
@@ -78,21 +112,21 @@ void _convert(AstNode *node) {
         case AST_LITERAL_NUMBER: {
             NumberLiteralNode *n = (NumberLiteralNode *)node;
             da_append(&res.instructions, iPush_Num);
-            da_append(&res.instructions, _store_constant(n->value.str));
+            da_append(&res.instructions, _store_constant(n->value.str, VAL_NUM));
             break;
         }
 
         case AST_LITERAL_STRING: {
             StringLiteralNode *n = (StringLiteralNode *)node;
             da_append(&res.instructions, iPush_Str);
-            da_append(&res.instructions, _store_constant(n->value.str));
+            da_append(&res.instructions, _store_constant(n->value.str, VAL_STR));
             break;
         }
 
         case AST_LITERAL_BOOL: {
             BoolLiteralNode *n = (BoolLiteralNode *)node;
             da_append(&res.instructions, iPush_Bool);
-            da_append(&res.instructions, _store_constant(n->token.str));
+            da_append(&res.instructions, _store_constant(n->token.str, VAL_BOOL));
             break;
         }
 

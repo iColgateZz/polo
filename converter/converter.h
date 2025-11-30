@@ -8,7 +8,6 @@
 typedef struct {
     InstructionSet instructions;
     s8Array debug_globals;
-    ValueArray globals;
     s8Array debug_constants;
     ValueArray constants;
 } ConversionResult;
