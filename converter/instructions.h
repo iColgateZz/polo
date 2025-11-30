@@ -11,6 +11,8 @@ typedef enum {
 
     iStore_Global,
     iLoad_Global,
+    iStore_Local,
+    iLoad_Local,
 
     iAdd,
     iSub,
@@ -31,7 +33,10 @@ typedef enum {
 
     iHalt,
 
-    iReturn
+    iReturn,
+    iCall,
+    iRestore,
+    iSave
 } Instruction;
 
 typedef struct {

@@ -5,8 +5,9 @@
 
 static inline usize _simple_instruction(byte *name, usize offset);
 static inline usize _disassemble_instruction(ConversionResult result, usize offset);
-static inline usize _double_instruction(Instruction i, usize offset, ConversionResult result);
+static inline usize _global_instruction(Instruction i, usize offset, ConversionResult result);
 static inline usize _const(Instruction i, usize offset, ConversionResult result);
+static inline usize _local_instruction(Instruction i, usize offset, ConversionResult result);
 
 #define instruction_size 1
 
@@ -24,11 +25,12 @@ usize _disassemble_instruction(ConversionResult result, usize offset) {
     Instruction instruction = result.instructions.items[offset];
     switch (instruction) {
         case iReturn:   return _simple_instruction("iReturn", offset);
-        case iPop:      return _simple_instruction("iPop", offset);
+
         case iAdd:      return _simple_instruction("iAdd", offset);
         case iSub:      return _simple_instruction("iSub", offset);
         case iMul:      return _simple_instruction("iMul", offset);
         case iDiv:      return _simple_instruction("iDiv", offset);
+
         case iNeg:      return _simple_instruction("iNeg", offset);
         case iAnd:      return _simple_instruction("iAnd", offset);
         case iOr:       return _simple_instruction("iOr", offset);
@@ -41,6 +43,10 @@ usize _disassemble_instruction(ConversionResult result, usize offset) {
         case iGte:      return _simple_instruction("iGte", offset);
         case iHalt:     return _simple_instruction("iHalt", offset);
 
+        case iSave:     return _simple_instruction("iSave", offset);
+        case iRestore:  return _simple_instruction("iRestore", offset);
+
+        case iPop:      return _simple_instruction("iPop", offset);
         case iPush_Num:
         case iPush_Str:
         case iPush_Bool:
@@ -48,7 +54,12 @@ usize _disassemble_instruction(ConversionResult result, usize offset) {
 
         case iStore_Global:
         case iLoad_Global:
-            return _double_instruction(instruction, offset, result);
+            return _global_instruction(instruction, offset, result);
+
+        case iStore_Local:
+        case iLoad_Local:
+        case iCall:
+            return _local_instruction(instruction, offset, result);
 
         default: UNREACHABLE();
     }
@@ -88,7 +99,7 @@ usize _const(Instruction i, usize offset, ConversionResult result) {
 }
 
 static inline
-usize _double_instruction(Instruction i, usize offset, ConversionResult result) {
+usize _global_instruction(Instruction i, usize offset, ConversionResult result) {
     usize idx = result.instructions.items[offset + instruction_size];
     s8 str = result.globals.items[idx];
     switch (i) {
@@ -98,5 +109,19 @@ usize _double_instruction(Instruction i, usize offset, ConversionResult result) 
     }
 
     printf("%.*s\n", (i32)str.len, str.s);
+    return offset + 2 * instruction_size;
+}
+
+static inline
+usize _local_instruction(Instruction i, usize offset, ConversionResult result) {
+    isize idx = result.instructions.items[offset + instruction_size];
+    switch (i) {
+        case iStore_Local: printf("iStore_Local "); break;
+        case iLoad_Local:  printf("iLoad_Local ");  break;
+        case iCall:        printf("iCall ");  break;
+        default: UNREACHABLE();
+    }
+
+    printf("%ld\n", idx);
     return offset + 2 * instruction_size;
 }

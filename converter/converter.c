@@ -1,6 +1,5 @@
 #include "converter.h"
 #include "../ast/special_nodes.h"
-#include "../ast/token.h"
 #include "da.h"
 #include <string.h>
 #include <stdio.h>
@@ -12,7 +11,7 @@ void _init_converter(void) {
     res = (ConversionResult) {0};
 }
 
-usize _store_global(s8 str) {
+isize _store_global(s8 str) {
     da_append(&res.globals, str);
     return res.globals.count - 1;
 }
@@ -36,7 +35,7 @@ Number _s8_to_num(s8 str) {
     }
 }
 
-usize _store_constant(s8 str, ValueType type) {
+isize _store_constant(s8 str, ValueType type) {
     switch (type) {
         case VAL_STR:
             da_append(&res.constants, new_val_str(str)); 
@@ -59,15 +58,97 @@ b32 _s8_eq(s8 s1, s8 s2) {
         memcmp(s1.s, s2.s, s1.len) == 0;
 }
 
-usize _find_global(s8 str) {
+isize _find_global(s8 str) {
+    printf("looking for %.*s\n", (i32)str.len, str.s);
     for (usize i = 0; i < res.globals.count; ++i) {
+        printf("%.*s\n", (i32)res.globals.items[i].len, res.globals.items[i].s);
         if (_s8_eq(res.globals.items[i], str)) return i;
     }
 
     UNREACHABLE();
 }
 
-void _convert(AstNode *node);
+static inline
+b32 _token_eq(Token a, Token b) {
+    return a.str.len == b.str.len &&
+        memcmp(a.str.s, b.str.s, a.str.len) == 0;
+}
+
+typedef struct {
+    Token name;
+    isize scope;
+} LocalSymbol;
+
+typedef struct {
+    LocalSymbol *items;
+    usize count;
+    usize capacity;
+} LocalStack;
+
+typedef struct {
+    LocalStack locals;
+    isize scope;
+    b32 in_func;
+} Info;
+
+static Info info;
+
+static void _init_info(void) {
+    info = (Info) {0};
+}
+
+static inline
+void scope(void) {
+    info.scope++;
+}
+
+static inline
+void rm_scope(void) {
+    info.scope--;
+}
+
+static void _clear_local(void) {
+    info.locals.count = 0;
+}
+
+static isize _push_local(LocalSymbol local) {
+    da_append(&info.locals, local);
+    return info.locals.count - 1;
+}
+
+static LocalSymbol _new_local(Token name) {
+    return (LocalSymbol) {.name = name, .scope = info.scope };
+}
+
+static isize _lookup_local(Token name) {
+    for (usize i = 0; i < info.locals.count; ++i) {
+        if (_token_eq(info.locals.items[i].name, name) 
+            && info.locals.items[i].scope <= info.scope)
+            return i;
+    }
+    return -1;
+}
+
+static usize _lookup_function(Token name) {
+    for (usize i = 0; i < res.functions.count; ++i) {
+        if (_token_eq(res.functions.items[i].name, name))
+            return i;
+    }
+    UNREACHABLE();
+}
+
+static void _add_function(Token name, b32 unknown, isize offset) {
+    FunctionSymbol s = {.name = name, .unknown = unknown, .offset = offset};
+    for (usize i = 0; i < res.functions.count; ++i) {
+        if (_token_eq(res.functions.items[i].name, name)) {
+            res.functions.items[i] = s;
+            return;
+        }
+    }
+
+    da_append(&res.functions, s);
+    return;
+}
 
 void _convert(AstNode *node) {
     if (!node) return;
@@ -82,14 +163,63 @@ void _convert(AstNode *node) {
             break;
         }
 
+        case AST_FUNCTION_DECL: {
+            FunctionDeclNode *fn = (FunctionDeclNode *)node;
+
+            _add_function(fn->name, fn->body == NULL, res.instructions.count);
+
+            AstNodeArray params = ((ParameterListNode *)fn->parameters)->parameters;
+            for (usize i = 0; i < params.count; ++i) {
+                ParameterNode *param = (ParameterNode *)params.items[i];
+                _push_local(_new_local(param->name));
+            }
+
+            if (fn->body) {
+                info.in_func = true;
+    
+                _convert(fn->body);
+    
+                info.in_func = false;
+                _clear_local();
+    
+                da_append(&res.instructions, iRestore);
+            }
+            break;
+        }
+
+        case AST_BLOCK: {
+            BlockNode *block = (BlockNode *)node;
+            scope();
+            for (usize i = 0; i < block->statements.count; ++i)
+                _convert(block->statements.items[i]);
+            rm_scope();
+            break;
+        }
+
+        case AST_CALL_EXPR: {
+            CallExprNode *call = (CallExprNode *)node;
+            IdentifierNode *callee = (IdentifierNode *)call->callee;
+            AstNodeArray args = ((ArgumentListNode *)call->arguments)->arguments;
+
+            da_append(&res.instructions, iSave);
+
+            for (usize i = 0; i < args.count; ++i)
+                _convert(args.items[i]);
+
+            usize offset = _lookup_function(callee->name);
+
+            da_append(&res.instructions, iCall);
+            da_append(&res.instructions, offset);
+
+            break;
+        }
+
         case AST_VAR_DECL: {
             VarDeclNode *var = (VarDeclNode *)node;
-            usize global_idx = _store_global(var->name.str);
-            
+
             if (var->initializer) {
                 _convert(var->initializer);
             } else {
-                // Push default value depending on type
                 PrimitiveTypeNode *type = (PrimitiveTypeNode *)var->type;
                 if (type->this.ast_type == AST_TYPE_NUM) {
                     da_append(&res.instructions, iPush_Num);
@@ -102,8 +232,17 @@ void _convert(AstNode *node) {
                     da_append(&res.instructions, _store_constant(s8(""), VAL_STR));
                 }
             }
-            da_append(&res.instructions, iStore_Global);
-            da_append(&res.instructions, global_idx);
+
+            if (info.in_func) {
+                isize local_idx = _push_local(_new_local(var->name));
+                da_append(&res.instructions, iStore_Local);
+                da_append(&res.instructions, local_idx);
+            } else {
+                isize global_idx = _store_global(var->name.str);
+                da_append(&res.instructions, iStore_Global);
+                da_append(&res.instructions, global_idx);
+            }
+
             break;
         }
 
@@ -130,26 +269,36 @@ void _convert(AstNode *node) {
 
         case AST_IDENTIFIER: {
             IdentifierNode *id = (IdentifierNode *)node;
-            usize global_idx = _find_global(id->name.str);
-            da_append(&res.instructions, iLoad_Global);
-            da_append(&res.instructions, global_idx);
+            isize local_idx = _lookup_local(id->name);
+            if (local_idx >= 0) {
+                da_append(&res.instructions, iLoad_Local);
+                da_append(&res.instructions, local_idx);
+            } else {
+                usize global_idx = _find_global(id->name.str);
+                da_append(&res.instructions, iLoad_Global);
+                da_append(&res.instructions, global_idx);
+            }
             break;
         }
 
         case AST_ASSIGN_EXPR: {
             AssignExprNode *assign = (AssignExprNode *)node;
-            // Evaluate RHS first
             _convert(assign->value);
 
-            // Then LHS (should be identifier)
             IdentifierNode *id = (IdentifierNode *)assign->lvalue;
-            usize global_idx = _find_global(id->name.str);
-            da_append(&res.instructions, iStore_Global);
-            da_append(&res.instructions, global_idx);
-
-            // For assignment as an expression, also load the value back
-            da_append(&res.instructions, iLoad_Global);
-            da_append(&res.instructions, global_idx);
+            isize local_idx = _lookup_local(id->name);
+            if (local_idx >= 0) {
+                da_append(&res.instructions, iStore_Local);
+                da_append(&res.instructions, local_idx);
+                da_append(&res.instructions, iLoad_Local);
+                da_append(&res.instructions, local_idx);
+            } else {
+                usize global_idx = _find_global(id->name.str);
+                da_append(&res.instructions, iStore_Global);
+                da_append(&res.instructions, global_idx);
+                da_append(&res.instructions, iLoad_Global);
+                da_append(&res.instructions, global_idx);
+            }
             break;
         }
 
@@ -200,6 +349,7 @@ void _convert(AstNode *node) {
 
 ConversionResult convert(AstNode *program) {
     _init_converter();
+    _init_info();
     _convert(program);
     return res;
 }

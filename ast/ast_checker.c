@@ -15,10 +15,12 @@ typedef struct {
 
 static Checker checker;
 
+static inline
 void scope(void) {
     checker.scope++;
 }
 
+static inline
 void rm_scope(void) {
     checker.scope--;
 }
@@ -59,6 +61,7 @@ b32 _any_type(AstNode *node, i32 count, ...) {
     return false;
 }
 
+static inline
 b32 _token_eq(Token a, Token b) {
     return a.str.len == b.str.len &&
         memcmp(a.str.s, b.str.s, a.str.len) == 0;

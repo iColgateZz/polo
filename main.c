@@ -31,8 +31,8 @@ i32 main(void) {
         return -1;
     }
 
-    // ConversionResult conv_result = convert(parse_result.program);
-    // disassemble(conv_result, "main");
+    ConversionResult conv_result = convert(parse_result.program);
+    disassemble(conv_result, "main");
 
     // free(source);
     // free(scan_result.tokens.items);
