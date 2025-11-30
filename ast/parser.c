@@ -224,7 +224,8 @@ AstNode *parse_type(void) {
     Token t = _peek();
     if (_match(TOKEN_NUM) ||
         _match(TOKEN_STRING) ||
-        _match(TOKEN_BOOL)) {
+        _match(TOKEN_BOOL) ||
+        _match(TOKEN_VOID)) {
         return new_primitive_type_node(t);
     } else {
         return _error("type");

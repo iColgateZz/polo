@@ -1,18 +1,8 @@
-num d = 5;
-string c = "what?";
-
-num func(num a, num b) {
-    bool c = (a - b) > 0;
-    num z = a + b + d;
-    {
-        num e = 5;
-        num f = e + 5;
-        num z = 5;
-        num n = 15 = 25;
-        bool qwe = true < false;
-    }
-    num g = e;
+void func(num a, num b) {
+    void c;
 }
+
+void f;
 
 // comment
 

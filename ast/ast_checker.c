@@ -369,6 +369,12 @@ AstNode *_check_node(AstNode *node) {
 
         case AST_VAR_DECL: {
             VarDeclNode *var = (VarDeclNode *)node;
+            
+            if (var->type->ast_type == AST_TYPE_VOID) {
+                _semantic_error("variable '%.*s' of type 'void' at line %d",
+                    (i32)var->name.str.len, var->name.str.s, var->name.line);
+                return NULL;
+            }
 
             if (!checker.in_func) {
                 if (_lookup_global(var->name)) {
@@ -416,6 +422,7 @@ AstNode *_check_node(AstNode *node) {
                     (i32)id->name.str.len, id->name.str.s, id->name.line);
                 return NULL;
             }
+
             return type;
         }
 
