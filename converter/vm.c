@@ -3,6 +3,7 @@
 #include "number.h"
 #include "da.h"
 #include "macros.h"
+#include <stdio.h>
 
 typedef struct {
     usize *items;
@@ -32,14 +33,6 @@ Value pop(ValueArray *a) {
     UNREACHABLE();
 }
 
-static inline 
-Value peek(ValueArray *a) {
-    if (a->count > 0) {
-        return a->items[a->count - 1];
-    }
-    UNREACHABLE();
-}
-
 static inline
 Instruction get_instr(InstructionSet i, usize idx) {
     return i.items[idx];
@@ -54,13 +47,9 @@ b32 run(LinkResult res) {
     da_reserve(&vm.globals, 256);
 
     InstructionSet instructions = res.instructions;
-    Value ret_val;
-    b32 has_ret = false;
-
-    printf("Running code\n\n");
 
     while (true) {
-        printf("Instr_ptr: %zu\n", vm.instr_pointer);
+        // printf("Instr_ptr: %zu\n", vm.instr_pointer);
         Instruction instr = get_instr(instructions, vm.instr_pointer++);
 
         switch (instr) {
@@ -215,26 +204,26 @@ b32 run(LinkResult res) {
             }
 
             case iRestore: {
-                // restore instruction pointer
-                if (vm.return_stack.count == 0) 
+                if (vm.return_stack.count == 0)
                     return false;
+
                 vm.instr_pointer = vm.return_stack.items[--vm.return_stack.count];
 
-                // restore base pointer
                 if (vm.base_pointer == 0)
                     return false;
+
                 // previous base pointer is stored just before the current frame
                 Value bp_val = vm.stack.items[vm.base_pointer - 1];
                 usize prev_bp = bp_val.num.num_val.i;
-                // pop everything above the previous base pointer (including the saved bp)
-                vm.stack.count = vm.base_pointer - 1;
-                vm.base_pointer = prev_bp;
 
-                if (has_ret) {
+                // If there is a return value, move it just above the previous frame
+                if (vm.stack.count > vm.base_pointer) {
+                    Value ret_val = pop(&vm.stack);
                     push(&vm.stack, ret_val);
-                    has_ret = false;
                 }
 
+                vm.stack.count = vm.base_pointer - 1;
+                vm.base_pointer = prev_bp;
                 break;
             }
 
@@ -242,12 +231,6 @@ b32 run(LinkResult res) {
                 usize addr = get_instr(instructions, vm.instr_pointer++);
                 da_append(&vm.return_stack, vm.instr_pointer);
                 vm.instr_pointer = addr;
-                break;
-            }
-
-            case iReturn: {
-                ret_val = pop(&vm.stack);
-                has_ret = true;
                 break;
             }
 
