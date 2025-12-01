@@ -221,12 +221,13 @@ AstNode *parse_statement(void) {
         // case TOKEN_PRINT: return parse_print_stmt();
         // case TOKEN_BREAK: return parse_break_stmt();
         // case TOKEN_CONTINUE: return parse_continue_stmt();
-        default:
+        default: {
             AstNode *expr = parse_expression();
             no_panic(expr);
             if (!_match(TOKEN_SEMICOLON))
                 return _error("';'");
             return new_expr_stmt_node(expr);
+        }
     }
 }
 
