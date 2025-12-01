@@ -20,7 +20,7 @@ i32 main(void) {
         return -1;
     }
 
-    pretty_print_tokens(scan_result.tokens);
+    // pretty_print_tokens(scan_result.tokens);
 
     ParseResult parse_result = parse(scan_result.tokens);
     if (parse_result.error) {
@@ -34,7 +34,7 @@ i32 main(void) {
     }
 
     ConversionResult conv_result = convert(parse_result.program);
-    disassemble(conv_result, "resolved before calling 'main'");
+    // disassemble(conv_result, "resolved before calling 'main'");
 
     LinkResult link_result = link(conv_result);
     if (link_result.error) {

@@ -229,6 +229,13 @@ b32 run(LinkResult res) {
             }
 
             case iCall: {
+                printf("Print base ptr before iCall: %zu\n", vm.base_pointer);
+                printf("Print stack before iCall\n");
+                for (usize i = 0; i < vm.stack.count; ++i) {
+                    Value v = vm.stack.items[i];
+                    print_val(v);
+                }
+
                 usize addr = get_instr(instructions, vm.instr_pointer++);
                 da_append(&vm.return_stack, vm.instr_pointer);
                 vm.instr_pointer = addr;
@@ -237,23 +244,7 @@ b32 run(LinkResult res) {
 
             case iPrint: {
                 Value val = pop(&vm.stack);
-                switch (val.type) {
-                    case VAL_BOOL: {
-                        printf("%s", bool_str(val.bool));
-                        break;
-                    }
-                    case VAL_NUM: {
-                        print_num(val.num);
-                        break;
-                    }
-                    case VAL_STR: {
-                        printf("%.*s", (i32)val.str.len, val.str.s);
-                        break;
-                    }
-                    default: UNREACHABLE();
-                }
-                printf("\n");
-
+                print_val(val);
                 break;
             }
 

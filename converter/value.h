@@ -30,4 +30,6 @@ Value new_val_bool(b32 val);
 Value new_val_num(Number val);
 Value new_val_str(s8 val);
 
+void print_val(Value val);
+
 #endif

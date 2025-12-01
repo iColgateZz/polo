@@ -1,9 +1,11 @@
-num f(num n, num c) {
-    return n * c;
+num a = 5;
+bool b = true;
+
+num f(num c, num b) {
+    return b + c;
 }
 
 void main() {
-    num abqwe = 3 + f(1, 0) * 15;
-    print f(1, 2);
-    print "aboba";
+    num c = a * 7 -2 ;
+    print f(c, a);
 }
