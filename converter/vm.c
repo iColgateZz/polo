@@ -5,11 +5,18 @@
 #include "macros.h"
 
 typedef struct {
+    usize *items;
+    usize count;
+    usize capacity;
+} ReturnAddrStack;
+
+typedef struct {
     usize base_pointer;
     usize instr_pointer;
     ValueArray stack;
     ValueArray constants;
     ValueArray globals;
+    ReturnAddrStack return_stack;
 } Vm;
 
 static inline
@@ -45,6 +52,8 @@ b32 run(LinkResult res) {
     };
 
     InstructionSet instructions = res.instructions;
+    Value ret_val;
+    b32 has_ret = false;
 
     while (true) {
         Instruction instr = get_instr(instructions, vm.instr_pointer++);
@@ -52,7 +61,7 @@ b32 run(LinkResult res) {
         switch (instr) {
 
             case iHalt:
-                return 1;
+                return true;
 
             case iPush_Str:
             case iPush_Bool:
@@ -193,12 +202,50 @@ b32 run(LinkResult res) {
                 break;
             }
 
+            case iSave: {
+                Value bp_val = new_val_num(new_num_int((i32)vm.base_pointer));
+                push(&vm.stack, bp_val);
+                vm.base_pointer = vm.stack.count;
+                break;
+            }
+
+            case iRestore: {
+                // restore instruction pointer
+                if (vm.return_stack.count == 0) 
+                    return false;
+                vm.instr_pointer = vm.return_stack.items[--vm.return_stack.count];
+
+                // restore base pointer
+                if (vm.base_pointer == 0)
+                    return false;
+                // previous base pointer is stored just before the current frame
+                Value bp_val = vm.stack.items[vm.base_pointer - 1];
+                usize prev_bp = bp_val.num.num_val.i;
+                // pop everything above the previous base pointer (including the saved bp)
+                vm.stack.count = vm.base_pointer - 1;
+                vm.base_pointer = prev_bp;
+
+                if (has_ret) {
+                    push(&vm.stack, ret_val);
+                    has_ret = false;
+                }
+
+                break;
+            }
+
             case iCall: {
                 usize addr = get_instr(instructions, vm.instr_pointer++);
+                da_append(&vm.return_stack, vm.instr_pointer);
                 vm.instr_pointer = addr;
                 break;
             }
-            
+
+            case iReturn: {
+                ret_val = pop(&vm.stack);
+                has_ret = true;
+                break;
+            }
+
             default: UNREACHABLE();
         }
     }
