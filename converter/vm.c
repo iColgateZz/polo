@@ -230,59 +230,36 @@ b32 run(LinkResult res) {
 
             case iRestore: {
                 if (vm.return_stack.count == 0)
-                    return false;
+                    UNREACHABLE();
 
                 vm.instr_pointer = vm.return_stack.items[--vm.return_stack.count];
 
                 vm.base_pointer = popu(&vm.base_stack);
-                // usize prev_top_stack = popu(&vm.top_stack);
-                
-                // if (vm.stack.count > prev_top_stack) {
-                //     Value ret_val = popv(&vm.stack);
-                //     vm.stack.count = prev_top_stack;
-                //     pushv(&vm.stack, ret_val);
-                // } else {
-                //     vm.stack.count = prev_top_stack;
-                // }
-
                 break;
             }
 
             case iCall: {
-                /* Compute how many argument values were pushed after the last iSave.
-                iSave pushed the previous operand-stack size onto top_stack, so
-                the last entry of top_stack is the operand stack size before
-                arguments were pushed. */
                 usize addr = get_instr(instructions, vm.instr_pointer++);
 
                 if (vm.top_stack.count == 0) {
-                    /* No saved top — calling without prior iSave is an error; handle as you prefer. */
-                    return false;
+                    UNREACHABLE();
                 }
 
                 usize prev_stack_count = vm.top_stack.items[vm.top_stack.count - 1];
                 if (vm.stack.count < prev_stack_count) {
-                    /* Shouldn't happen: stack underflow relative to saved top */
-                    return false;
+                    // stack underflow relative to saved top
+                    UNREACHABLE();
                 }
 
                 usize num_args = vm.stack.count - prev_stack_count;
-
-                /* Move args from operand stack into new locals at base_pointer + i.
-                Arguments order must match the compiler's order. Here we copy them
-                such that the oldest argument is at locals[base + 0], and the last
-                pushed argument is at locals[base + num_args-1]. */
                 for (usize i = 0; i < num_args; ++i) {
-                    /* source index in operand stack */
                     usize src = prev_stack_count + i;
-                    /* destination local index */
                     storev(&vm.locals, vm.base_pointer + i, vm.stack.items[src]);
                 }
 
-                /* drop arguments from operand stack (reset to prev saved top) */
+                // reset stack to the pre-argument-passing size
                 vm.stack.count = prev_stack_count;
 
-                /* save return address and jump */
                 pushu(&vm.return_stack, vm.instr_pointer);
                 vm.instr_pointer = addr;
                 break;

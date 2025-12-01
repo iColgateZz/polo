@@ -1,13 +1,11 @@
 num a = 5;
 bool b = true;
 
-num f(num c, num d) {
-    print c;
-    print d;
-    return d + c;
+bool f(num a, num b) {
+    return a > b;
 }
 
 void main() {
-    num c = a * 7 -2 ;
-    print f(c, a);
+    num c = a * 7.0 / 3 ;
+    print c;
 }
