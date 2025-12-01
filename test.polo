@@ -1,5 +1,6 @@
 num factorial(num n, num c) {
     num b = 5 + 12;
+    return 5;
 }
 
 void main() {

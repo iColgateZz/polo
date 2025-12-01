@@ -56,6 +56,14 @@ AstNode *_error(byte *expected) {
     return new_error_node(t, expected);
 }
 
+static inline
+b32 _is_type(Token t) {
+    return t.type == TOKEN_NUM ||
+           t.type == TOKEN_STRING ||
+           t.type == TOKEN_BOOL ||
+           t.type == TOKEN_VOID;
+}
+
 #define no_panic(node) do { if (parser.panic) return node; } while (0)
 
 static AstNode *parse_var_decl(void);
@@ -76,6 +84,8 @@ static AstNode *parse_parameters(void);
 static AstNode *parse_block(void);
 static AstNode *parse_call(void);
 static AstNode *parse_arguments(void);
+static AstNode *parse_statement(void);
+static AstNode *parse_return_stmt(void);;
 
 static inline
 void _synchronize(void) {
@@ -177,10 +187,10 @@ AstNode *parse_block(void) {
 
     while (_peek().type != TOKEN_RIGHT_BRACE && !_at_end()) {
         AstNode *stmt;
-        if (_peek().type == TOKEN_LEFT_BRACE) {
-            stmt = parse_block();
-        } else {
+        if (_is_type(_peek())) {
             stmt = parse_var_decl();
+        } else {
+            stmt = parse_statement();
         }
         
         if (parser.panic) {
@@ -195,6 +205,42 @@ AstNode *parse_block(void) {
             return _error("}");
 
     return new_block_node(stmts);
+}
+
+static 
+AstNode *parse_statement(void) {
+    Token t = _peek();
+    switch (t.type) {
+        case TOKEN_RETURN:
+            return parse_return_stmt();
+        case TOKEN_LEFT_BRACE:
+            return parse_block();
+        // case TOKEN_IF: return parse_if_stmt();
+        // case TOKEN_FOR: return parse_for_stmt();
+        // case TOKEN_WHILE: return parse_while_stmt();
+        // case TOKEN_PRINT: return parse_print_stmt();
+        // case TOKEN_BREAK: return parse_break_stmt();
+        // case TOKEN_CONTINUE: return parse_continue_stmt();
+        default:
+            AstNode *expr = parse_expression();
+            no_panic(expr);
+            if (!_match(TOKEN_SEMICOLON))
+                return _error("';'");
+            return new_expr_stmt_node(expr);
+    }
+}
+
+static 
+AstNode *parse_return_stmt(void) {
+    _match(TOKEN_RETURN);
+    AstNode *expr = NULL;
+    if (_peek().type != TOKEN_SEMICOLON) {
+        expr = parse_expression();
+        no_panic(expr);
+    }
+    if (!_match(TOKEN_SEMICOLON))
+        return _error("';' after return");
+    return new_return_stmt_node(expr);
 }
 
 static 
