@@ -65,6 +65,12 @@ void print_ast(AstNode *node, i32 indent) {
             print_ast(ret->expression, indent + 2);
             break;
         }
+        case AST_PRINT_STMT: {
+            PrintStmtNode *p = (PrintStmtNode *)node;
+            _indent(indent); printf("PrintStmt\n");
+            print_ast(p->expression, indent + 2);
+            break;
+        }
         case AST_CALL_EXPR: {
             CallExprNode *call = (CallExprNode *)node;
             _indent(indent); printf("CallExpr\n");

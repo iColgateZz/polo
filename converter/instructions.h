@@ -36,7 +36,9 @@ typedef enum {
     iReturn,
     iCall,
     iRestore,
-    iSave
+    iSave,
+
+    iPrint
 } Instruction;
 
 typedef struct {

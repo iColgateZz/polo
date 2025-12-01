@@ -218,6 +218,13 @@ void _convert(AstNode *node) {
             break;
         }
 
+        case AST_PRINT_STMT: {
+            PrintStmtNode *p = (PrintStmtNode *)node;
+            _convert(p->expression);
+            _append_i(iPrint);
+            break;
+        }
+
         case AST_CALL_EXPR: {
             CallExprNode *call = (CallExprNode *)node;
             IdentifierNode *callee = (IdentifierNode *)call->callee;

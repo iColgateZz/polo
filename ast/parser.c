@@ -85,7 +85,8 @@ static AstNode *parse_block(void);
 static AstNode *parse_call(void);
 static AstNode *parse_arguments(void);
 static AstNode *parse_statement(void);
-static AstNode *parse_return_stmt(void);;
+static AstNode *parse_return_stmt(void);
+static AstNode *parse_print_stmt(void);
 
 static inline
 void _synchronize(void) {
@@ -215,10 +216,11 @@ AstNode *parse_statement(void) {
             return parse_return_stmt();
         case TOKEN_LEFT_BRACE:
             return parse_block();
+        case TOKEN_PRINT: 
+            return parse_print_stmt();
         // case TOKEN_IF: return parse_if_stmt();
         // case TOKEN_FOR: return parse_for_stmt();
         // case TOKEN_WHILE: return parse_while_stmt();
-        // case TOKEN_PRINT: return parse_print_stmt();
         // case TOKEN_BREAK: return parse_break_stmt();
         // case TOKEN_CONTINUE: return parse_continue_stmt();
         default: {
@@ -234,14 +236,24 @@ AstNode *parse_statement(void) {
 static 
 AstNode *parse_return_stmt(void) {
     _match(TOKEN_RETURN);
-    AstNode *expr = NULL;
-    if (_peek().type != TOKEN_SEMICOLON) {
-        expr = parse_expression();
-        no_panic(expr);
-    }
+    AstNode *expr = parse_expression();
+    no_panic(expr);
+
     if (!_match(TOKEN_SEMICOLON))
-        return _error("';' after return");
+        return _error(";");
+
     return new_return_stmt_node(expr);
+}
+
+static AstNode *parse_print_stmt(void) {
+    _match(TOKEN_PRINT);
+    AstNode *expr = parse_expression();
+    no_panic(expr);
+
+    if (!_match(TOKEN_SEMICOLON))
+        return _error(";");
+
+    return new_print_stmt_node(expr);
 }
 
 static 

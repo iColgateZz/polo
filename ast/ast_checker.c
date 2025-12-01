@@ -368,6 +368,11 @@ AstNode *_check_node(AstNode *node) {
             return NULL;
         }
 
+        case AST_PRINT_STMT: {
+            PrintStmtNode *p = (PrintStmtNode *)node;
+            return _check_node(p->expression);
+        }
+
         case AST_CALL_EXPR: {
             CallExprNode *call = (CallExprNode *)node;
             IdentifierNode *callee = (IdentifierNode *)call->callee;

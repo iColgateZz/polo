@@ -209,6 +209,8 @@ void _print_instr(Instruction instr) {
 
     case iHalt:          printf("iHalt");          break;
 
+    case iPrint:         printf("iPrint");         break;
+
     case iReturn:        printf("iReturn");        break;
     case iCall:          printf("iCall");          break;
     case iRestore:       printf("iRestore");       break;

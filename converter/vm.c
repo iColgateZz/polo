@@ -234,6 +234,28 @@ b32 run(LinkResult res) {
                 break;
             }
 
+            case iPrint: {
+                Value val = pop(&vm.stack);
+                switch (val.type) {
+                    case VAL_BOOL: {
+                        printf("%s", bool_str(val.bool));
+                        break;
+                    }
+                    case VAL_NUM: {
+                        print_num(val.num);
+                        break;
+                    }
+                    case VAL_STR: {
+                        printf("%.*s", (i32)val.str.len, val.str.s);
+                        break;
+                    }
+                    default: UNREACHABLE();
+                }
+                printf("\n");
+
+                break;
+            }
+
             default: UNREACHABLE();
         }
     }

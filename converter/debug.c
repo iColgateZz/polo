@@ -53,6 +53,8 @@ usize _disassemble_instruction(InstructionSet *instructions, ConversionResult re
         case iGte:      return _simple_instruction("iGte", offset);
         case iHalt:     return _simple_instruction("iHalt", offset);
 
+        case iPrint:    return _simple_instruction("iPrint", offset);
+
         case iSave:     return _simple_instruction("iSave", offset);
         case iRestore:  return _simple_instruction("iRestore", offset);
 

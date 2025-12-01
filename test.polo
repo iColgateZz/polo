@@ -5,7 +5,8 @@ num factorial(num n, num c) {
 
 void main() {
     // num b = a;
-    num abqwe = 3 + factorial(2, 15) * 15;
+    num abqwe = factorial(1, 0);
+    print abqwe;
 }
 
 num a = 3;
