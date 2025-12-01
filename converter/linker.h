@@ -8,6 +8,7 @@
 typedef struct {
     InstructionSet instructions;
     ValueArray constants;
+    usize first_instr;
     b32 error;
 } LinkResult;
 

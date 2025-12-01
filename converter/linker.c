@@ -141,7 +141,7 @@ LinkResult link(ConversionResult conv) {
         instructions_len += conv.functions.items[i].instructions.count;
 
         if (conv.functions.items[i].instructions.count == 0) {
-            _linker_error("function '%.*s' is not provided. "
+            _linker_error("function's '%.*s' body not provided. "
                           "Prototype mentioned at line %d",
                 (i32)conv.functions.items[i].name.str.len, 
                 conv.functions.items[i].name.str.s, 
@@ -171,12 +171,16 @@ LinkResult link(ConversionResult conv) {
         _linker_error("function 'main' not found");
         return (LinkResult) { .error = true };
     }
-    
+
+    // Code from functions
     for (usize i = 0; i < conv.functions.count; ++i) {
         usize last = dfs_link_function(i, &conv, &use_arr, &instructions, instructions.count);
         instructions.count = last;
     }
 
+    usize first_instr = instructions.count;
+
+    // Code to run before calling 'main'
     for (usize i = 0; i < conv.instructions.count; ++i) {
         Instruction instr = conv.instructions.items[i];
         da_append(&instructions, instr);
@@ -197,7 +201,11 @@ LinkResult link(ConversionResult conv) {
     da_append(&instructions, get_address(use_arr, main_idx));
     da_append(&instructions, iHalt);
 
-    return (LinkResult) { .constants = conv.constants, .instructions = instructions };
+    return (LinkResult) { 
+        .constants = conv.constants, 
+        .instructions = instructions, 
+        .first_instr = first_instr 
+    };
 }
 
 void _print_instr(Instruction instr) {
@@ -244,6 +252,7 @@ void _print_instr(Instruction instr) {
 
 void print_link(LinkResult res) {
     printf("== After linking ==\n");
+    printf("== Start: %04zu ==\n", res.first_instr);
 
     for (usize i = 0; i < res.instructions.count; ++i) {
         Instruction instr = res.instructions.items[i];

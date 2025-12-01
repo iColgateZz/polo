@@ -1,3 +1,9 @@
-num factorial(n) {
-    
+num factorial(num n) {
+    num b = 5 + 12;
 }
+
+void main() {
+    // num b = a;
+}
+
+num a = 3;
