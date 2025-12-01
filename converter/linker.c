@@ -50,8 +50,7 @@ b32 _s8_eq(s8 s1, s8 s2) {
 }
 
 b32 has_arg(Instruction instr) {
-    return instr == iPush_Num || instr == iPush_Str || 
-           instr == iPush_Bool || instr == iStore_Global ||
+    return instr == iPush_Const || instr == iStore_Global ||
            instr == iLoad_Global || instr == iStore_Local ||
            instr == iLoad_Local;
 }
@@ -180,9 +179,7 @@ LinkResult link(ConversionResult conv) {
 
 void _print_instr(Instruction instr) {
     switch (instr) {
-    case iPush_Num:      printf("iPush_Num");      break;
-    case iPush_Str:      printf("iPush_Str");      break;
-    case iPush_Bool:     printf("iPush_Bool");     break;
+    case iPush_Const:    printf("iPush_Const");      break;
     case iPop:           printf("iPop");           break;
 
     case iStore_Global:  printf("iStore_Global");  break;
@@ -211,7 +208,6 @@ void _print_instr(Instruction instr) {
 
     case iPrint:         printf("iPrint");         break;
 
-    case iReturn:        printf("iReturn");        break;
     case iCall:          printf("iCall");          break;
     case iRestore:       printf("iRestore");       break;
     case iSave:          printf("iSave");          break;

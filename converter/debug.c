@@ -6,7 +6,7 @@
 static inline usize _simple_instruction(byte *name, usize offset);
 static inline usize _disassemble_instruction(InstructionSet *instructions, ConversionResult result, usize offset);
 static inline usize _global_instruction(Instruction i, usize offset, ConversionResult result, InstructionSet *instructions);
-static inline usize _const(Instruction i, usize offset, ConversionResult result, InstructionSet *instructions);
+static inline usize _const(usize offset, ConversionResult result, InstructionSet *instructions);
 static inline usize _local_instruction(Instruction i, usize offset, InstructionSet *instructions);
 static inline usize _call_instruction(usize offset, ConversionResult result, InstructionSet *instructions);
 
@@ -34,8 +34,6 @@ static inline
 usize _disassemble_instruction(InstructionSet *instructions, ConversionResult result, usize offset) {
     Instruction instruction = instructions->items[offset];
     switch (instruction) {
-        case iReturn:   return _simple_instruction("iReturn", offset);
-
         case iAdd:      return _simple_instruction("iAdd", offset);
         case iSub:      return _simple_instruction("iSub", offset);
         case iMul:      return _simple_instruction("iMul", offset);
@@ -59,10 +57,8 @@ usize _disassemble_instruction(InstructionSet *instructions, ConversionResult re
         case iRestore:  return _simple_instruction("iRestore", offset);
 
         case iPop:      return _simple_instruction("iPop", offset);
-        case iPush_Num:
-        case iPush_Str:
-        case iPush_Bool:
-            return _const(instruction, offset, result, instructions);
+        case iPush_Const:
+            return _const(offset, result, instructions);
 
         case iStore_Global:
         case iLoad_Global:
@@ -86,15 +82,10 @@ usize _simple_instruction(byte *name, usize offset) {
 }
 
 static inline
-usize _const(Instruction i, usize offset, ConversionResult result, InstructionSet *instructions) {
+usize _const(usize offset, ConversionResult result, InstructionSet *instructions) {
     usize idx = instructions->items[offset + instruction_size];
     Value value = result.constants.items[idx];
-    switch (i) {
-        case iPush_Num:  printf("iPush_Num ");  break;
-        case iPush_Str:  printf("iPush_Str ");  break;
-        case iPush_Bool: printf("iPush_Bool "); break;
-        default: UNREACHABLE();
-    }
+    printf("iPush_Const ");
 
     switch (value.type) {
         case VAL_BOOL:

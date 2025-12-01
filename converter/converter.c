@@ -251,13 +251,13 @@ void _convert(AstNode *node) {
             } else {
                 PrimitiveTypeNode *type = (PrimitiveTypeNode *)var->type;
                 if (type->this.ast_type == AST_TYPE_NUM) {
-                    _append_i(iPush_Num);
+                    _append_i(iPush_Const);
                     _append_i(_store_constant(s8("0"), VAL_NUM));
                 } else if (type->this.ast_type == AST_TYPE_BOOL) {
-                    _append_i(iPush_Bool);
+                    _append_i(iPush_Const);
                     _append_i(_store_constant(s8("false"), VAL_BOOL));
                 } else if (type->this.ast_type == AST_TYPE_STRING) {
-                    _append_i(iPush_Str);
+                    _append_i(iPush_Const);
                     _append_i(_store_constant(s8(""), VAL_STR));
                 }
             }
@@ -277,21 +277,21 @@ void _convert(AstNode *node) {
 
         case AST_LITERAL_NUMBER: {
             NumberLiteralNode *n = (NumberLiteralNode *)node;
-            _append_i(iPush_Num);
+            _append_i(iPush_Const);
             _append_i(_store_constant(n->value.str, VAL_NUM));
             break;
         }
 
         case AST_LITERAL_STRING: {
             StringLiteralNode *n = (StringLiteralNode *)node;
-            _append_i(iPush_Str);
+            _append_i(iPush_Const);
             _append_i(_store_constant(n->value.str, VAL_STR));
             break;
         }
 
         case AST_LITERAL_BOOL: {
             BoolLiteralNode *n = (BoolLiteralNode *)node;
-            _append_i(iPush_Bool);
+            _append_i(iPush_Const);
             _append_i(_store_constant(n->token.str, VAL_BOOL));
             break;
         }

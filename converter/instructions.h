@@ -4,9 +4,7 @@
 #include "types.h"
 
 typedef enum {
-    iPush_Num,
-    iPush_Str,
-    iPush_Bool,
+    iPush_Const,
     iPop,
 
     iStore_Global,
@@ -33,7 +31,6 @@ typedef enum {
 
     iHalt,
 
-    iReturn,
     iCall,
     iRestore,
     iSave,

@@ -57,9 +57,7 @@ b32 run(LinkResult res) {
             case iHalt:
                 return true;
 
-            case iPush_Str:
-            case iPush_Bool:
-            case iPush_Num: {
+            case iPush_Const: {
                 usize idx = get_instr(instructions, vm.instr_pointer++);
                 push(&vm.stack, vm.constants.items[idx]);
                 break;
