@@ -6,6 +6,7 @@
 #include "converter/converter.h"
 #include "converter/debug.h"
 #include "converter/linker.h"
+#include "converter/vm.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -46,6 +47,7 @@ i32 main(void) {
     // free(scan_result.tokens.items);
     // free_ast(parse_result.program);
 
+    run(link_result);
     return 0;
 }
 

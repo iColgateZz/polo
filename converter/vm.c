@@ -51,11 +51,16 @@ b32 run(LinkResult res) {
         .constants = res.constants
     };
 
+    da_reserve(&vm.globals, 256);
+
     InstructionSet instructions = res.instructions;
     Value ret_val;
     b32 has_ret = false;
 
+    printf("Running code\n\n");
+
     while (true) {
+        printf("Instr_ptr: %zu\n", vm.instr_pointer);
         Instruction instr = get_instr(instructions, vm.instr_pointer++);
 
         switch (instr) {

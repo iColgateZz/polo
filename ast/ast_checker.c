@@ -11,6 +11,7 @@ typedef struct {
     b32 panic;
     b32 in_func;
     AstNode *fn_ret_type;
+    b32 had_return;
     isize scope;
 } Checker;
 
@@ -308,8 +309,17 @@ AstNode *_check_node(AstNode *node) {
                 }
                 checker.in_func = true;
                 checker.fn_ret_type = fn->return_type;
+                checker.had_return = false;
 
                 _check_node(fn->body);
+
+                if (fn->return_type->ast_type != AST_TYPE_VOID &&
+                    !checker.had_return) {
+                    _semantic_error("function '%.*s' at line %d does "
+                                    "not have a return statement",
+                        (i32)fn->name.str.len, fn->name.str.s, fn->name.line);
+                    return NULL;
+                }
 
                 checker.in_func = false;
                 _clear_local();
@@ -332,6 +342,8 @@ AstNode *_check_node(AstNode *node) {
 
         case AST_RETURN_STMT: {
             ReturnStmtNode *ret = (ReturnStmtNode *)node;
+            checker.had_return = true;
+
             if (ret->expression && checker.fn_ret_type->ast_type == AST_TYPE_VOID ) {
                 _semantic_error("returning from a void function");
                 return NULL;

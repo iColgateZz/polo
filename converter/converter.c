@@ -189,7 +189,7 @@ void _convert(AstNode *node) {
                 info.in_func = true;
     
                 _convert(fn->body);
-                _append_i(iRestore);
+                // _append_i(iRestore);
     
                 _clear_local();
                 
@@ -206,6 +206,16 @@ void _convert(AstNode *node) {
                 _convert(block->statements.items[i]);
             info.locals.count = old_count;
             rm_scope();
+            break;
+        }
+
+        case AST_RETURN_STMT: {
+            ReturnStmtNode *ret = (ReturnStmtNode *)node;
+            if (ret->expression) {
+                _convert(ret->expression);
+                _append_i(iReturn);
+                _append_i(iRestore);
+            }
             break;
         }
 
