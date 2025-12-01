@@ -27,21 +27,21 @@ i32 main(void) {
         return -1;
     }
 
-    print_ast(parse_result.program, 0);
+    // print_ast(parse_result.program, 0);
 
     if (semantic_errors(parse_result.program)) {
         return -1;
     }
 
     ConversionResult conv_result = convert(parse_result.program);
-    // disassemble(conv_result, "resolved before calling 'main'");
+    disassemble(conv_result, "resolved before calling 'main'");
 
     LinkResult link_result = link(conv_result);
     if (link_result.error) {
         return -1;
     }
 
-    // print_link(link_result);
+    print_link(link_result);
 
     // free(source);
     // free(scan_result.tokens.items);

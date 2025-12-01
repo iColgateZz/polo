@@ -32,6 +32,7 @@ void disassemble(ConversionResult result, byte *set_name) {
 
 static inline
 usize _disassemble_instruction(InstructionSet *instructions, ConversionResult result, usize offset) {
+    printf("%04zu ", offset);
     Instruction instruction = instructions->items[offset];
     switch (instruction) {
         case iAdd:      return _simple_instruction("iAdd", offset);
@@ -66,6 +67,8 @@ usize _disassemble_instruction(InstructionSet *instructions, ConversionResult re
 
         case iStore_Local:
         case iLoad_Local:
+        case iJmp:
+        case iJmpZ:
             return _local_instruction(instruction, offset, instructions);
 
         case iCall:
@@ -96,6 +99,7 @@ usize _const(usize offset, ConversionResult result, InstructionSet *instructions
             break;
         case VAL_NUM:
             print_num(value.num);
+            printf("\n");
             break;
         
         default: UNREACHABLE();
@@ -123,6 +127,8 @@ usize _local_instruction(Instruction i, usize offset, InstructionSet *instructio
     switch (i) {
         case iStore_Local: printf("iStore_Local "); break;
         case iLoad_Local:  printf("iLoad_Local ");  break;
+        case iJmp:         printf("iJmp ");         break;
+        case iJmpZ:        printf("iJmpZ ");        break;
         default: UNREACHABLE();
     }
 

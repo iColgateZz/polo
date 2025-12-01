@@ -55,6 +55,10 @@ b32 has_arg(Instruction instr) {
            instr == iLoad_Local;
 }
 
+b32 is_jmp(Instruction instr) {
+    return instr == iJmpZ || instr == iJmp;
+}
+
 usize end_address = 0;
 
 static usize dfs_link_function(
@@ -92,6 +96,9 @@ static usize dfs_link_function(
         } else if (has_arg(instr)) {
             ++i;
             instructions->items[write_head++] = fn->instructions.items[i];
+        } else if (is_jmp(instr)) {
+            ++i;
+            instructions->items[write_head++] = fn->instructions.items[i] + start_address;
         }
         ++i;
     }
@@ -212,6 +219,9 @@ void _print_instr(Instruction instr) {
     case iRestore:       printf("iRestore");       break;
     case iSave:          printf("iSave");          break;
 
+    case iJmp:           printf("iJmp");           break;
+    case iJmpZ:          printf("iJmpZ");          break;
+
     default:
         printf("UNKNOWN_INSTRUCTION");
         break;
@@ -227,7 +237,7 @@ void print_link(LinkResult res) {
         printf("%04zu ", i);
         _print_instr(instr);
 
-        if (instr == iCall || has_arg(instr)) {
+        if (instr == iCall || has_arg(instr) || is_jmp(instr)) {
             usize arg = res.instructions.items[++i];
             printf(" %zu", arg);
         }

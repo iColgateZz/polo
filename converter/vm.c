@@ -272,6 +272,21 @@ b32 run(LinkResult res) {
                 break;
             }
 
+            case iJmpZ: {
+                usize addr = get_instr(instructions, vm.instr_pointer++);
+                Value val = popv(&vm.stack);
+                if (!val.bool) {
+                    vm.instr_pointer = addr;
+                }
+                break;
+            }
+
+            case iJmp: {
+                usize addr = get_instr(instructions, vm.instr_pointer++);
+                vm.instr_pointer = addr;
+                break;
+            }
+
             default: UNREACHABLE();
         }
     }

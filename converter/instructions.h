@@ -35,7 +35,10 @@ typedef enum {
     iRestore,
     iSave,
 
-    iPrint
+    iPrint,
+
+    iJmpZ,
+    iJmp
 } Instruction;
 
 typedef struct {

@@ -1,21 +1,12 @@
-num a = 5;
-bool b = true;
-
-num qwe(num n);
-
-num f(num a, num b) {
-    return qwe(a) + qwe(b);
+void qwe(num n) {
+    num i = 0;
+    while (i < n) {
+        num b = i = i + 1;
+        print i;
+        //i = b = i + 1;
+    }
 }
 
 void main() {
-    print f(a, 10) < 2 + 15 * 1 + 2;
-}
-
-num qwe(num n) {
-    num i = 0;
-    while (i < 10) {
-        print i;
-        i = i + 1;
-    }
-    return n / 2.0;
+    qwe(10);
 }

@@ -161,6 +161,10 @@ static void _append_i(usize i) {
     }
 }
 
+static usize _get_label(void) {
+    return res.functions.items[info.fn_idx].instructions.count;
+}
+
 void _convert(AstNode *node) {
     if (!node) return;
 
@@ -222,6 +226,33 @@ void _convert(AstNode *node) {
             PrintStmtNode *p = (PrintStmtNode *)node;
             _convert(p->expression);
             _append_i(iPrint);
+            break;
+        }
+
+        case AST_WHILE_STMT: {
+            WhileStmtNode *w = (WhileStmtNode *)node;
+            usize start_label = _get_label();
+
+            // eval condition
+            _convert(w->condition);
+            _append_i(iJmpZ);
+            usize lbl_end_idx = _get_label();
+            // append instruction to occupy space
+            _append_i(iJmpZ);
+
+            _convert(w->body);
+            _append_i(iJmp);
+            _append_i(start_label);
+
+            usize end_label = _get_label();
+            // fix jump to end_label
+            res.functions.items[info.fn_idx].instructions.items[lbl_end_idx] = end_label;
+            break;
+        }
+
+        case AST_EXPR_STMT: {
+            ExprStmtNode *e = (ExprStmtNode *)node;
+            _convert(e->expression);
             break;
         }
 
