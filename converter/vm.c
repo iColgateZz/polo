@@ -219,11 +219,14 @@ b32 run(LinkResult res) {
                 // If there is a return value, move it just above the previous frame
                 if (vm.stack.count > vm.base_pointer) {
                     Value ret_val = pop(&vm.stack);
+                    vm.stack.count = vm.base_pointer - 1;
+                    vm.base_pointer = prev_bp;
                     push(&vm.stack, ret_val);
+                } else {
+                    vm.stack.count = vm.base_pointer - 1;
+                    vm.base_pointer = prev_bp;
                 }
 
-                vm.stack.count = vm.base_pointer - 1;
-                vm.base_pointer = prev_bp;
                 break;
             }
 

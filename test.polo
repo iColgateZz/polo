@@ -1,12 +1,9 @@
-num factorial(num n, num c) {
-    num b = 5 + 12;
-    return 5;
+num f(num n, num c) {
+    return n * c;
 }
 
 void main() {
-    // num b = a;
-    num abqwe = factorial(1, 0);
-    print abqwe;
+    num abqwe = 3 + f(1, 0) * 15;
+    print f(1, 2);
+    print "aboba";
 }
-
-num a = 3;
