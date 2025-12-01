@@ -10,6 +10,7 @@ typedef struct {
     b32 error;
     b32 panic;
     b32 in_func;
+    AstNode *fn_ret_type;
     isize scope;
 } Checker;
 
@@ -306,6 +307,7 @@ AstNode *_check_node(AstNode *node) {
                     _push_local(_new_local(param->name, param->type));
                 }
                 checker.in_func = true;
+                checker.fn_ret_type = fn->return_type;
 
                 _check_node(fn->body);
 
@@ -325,6 +327,32 @@ AstNode *_check_node(AstNode *node) {
                 checker.panic = false;
             }
             rm_scope();
+            return NULL;
+        }
+
+        case AST_RETURN_STMT: {
+            ReturnStmtNode *ret = (ReturnStmtNode *)node;
+            if (ret->expression && checker.fn_ret_type->ast_type == AST_TYPE_VOID ) {
+                _semantic_error("returning from a void function");
+                return NULL;
+            }
+
+            if (!ret->expression && checker.fn_ret_type->ast_type != AST_TYPE_VOID ) {
+                _semantic_error("not returning from a non-void function");
+                return NULL;
+            }
+
+            if (!ret->expression) return NULL;
+
+            AstNode *ret_type = _check_node(ret->expression);
+            no_panic(ret_type);
+
+            if (!_types_compatible(ret_type, checker.fn_ret_type)) {
+                _semantic_error("the type of returned value does not match "
+                                "the return type of function");
+                return NULL;
+            }
+
             return NULL;
         }
 
