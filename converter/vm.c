@@ -9,7 +9,7 @@ typedef struct {
     usize *items;
     usize count;
     usize capacity;
-} ReturnAddrStack;
+} UsizeStack;
 
 typedef struct {
     usize base_pointer;
@@ -17,20 +17,46 @@ typedef struct {
     ValueArray stack;
     ValueArray constants;
     ValueArray globals;
-    ReturnAddrStack return_stack;
+    ValueArray locals;
+    UsizeStack return_stack;
+    UsizeStack base_stack;
+    UsizeStack top_stack;
 } Vm;
 
 static inline
-void push(ValueArray *a, Value val) {
+void pushv(ValueArray *a, Value val) {
     da_append(a, val);
 }
 
 static inline
-Value pop(ValueArray *a) {
+Value popv(ValueArray *a) {
     if (a->count > 0) {
         return a->items[--a->count];
     }
     UNREACHABLE();
+}
+
+static inline
+void storev(ValueArray *a, usize idx, Value val) {
+    a->items[idx] = val;
+}
+
+static inline
+void pushu(UsizeStack *a, usize val) {
+    da_append(a, val);
+}
+
+static inline
+usize popu(UsizeStack *a) {
+    if (a->count > 0) {
+        return a->items[--a->count];
+    }
+    UNREACHABLE();
+}
+
+static inline
+void storeu(UsizeStack *a, usize idx, usize val) {
+    a->items[idx] = val;
 }
 
 static inline
@@ -45,6 +71,7 @@ b32 run(LinkResult res) {
     };
 
     da_reserve(&vm.globals, 256);
+    da_reserve(&vm.locals, 256);
 
     InstructionSet instructions = res.instructions;
 
@@ -59,145 +86,145 @@ b32 run(LinkResult res) {
 
             case iPush_Const: {
                 usize idx = get_instr(instructions, vm.instr_pointer++);
-                push(&vm.stack, vm.constants.items[idx]);
+                pushv(&vm.stack, vm.constants.items[idx]);
                 break;
             }
 
             case iPop: {
-                pop(&vm.stack);
+                popv(&vm.stack);
                 break;
             }
 
             case iStore_Global: {
                 usize idx = get_instr(instructions, vm.instr_pointer++);
-                vm.globals.items[idx] = pop(&vm.stack);
+                vm.globals.items[idx] = popv(&vm.stack);
                 break;
             }
 
             case iLoad_Global: {
                 usize idx = get_instr(instructions, vm.instr_pointer++);
-                push(&vm.stack, vm.globals.items[idx]);
+                pushv(&vm.stack, vm.globals.items[idx]);
                 break;
             }
 
             case iStore_Local: {
                 usize idx = get_instr(instructions, vm.instr_pointer++);
-                vm.stack.items[vm.base_pointer + idx] = pop(&vm.stack);
+                storev(&vm.locals, vm.base_pointer + idx, popv(&vm.stack));
                 break;
             }
 
             case iLoad_Local: {
                 usize idx = get_instr(instructions, vm.instr_pointer++);
-                push(&vm.stack, vm.stack.items[vm.base_pointer + idx]);
+                pushv(&vm.stack, vm.locals.items[vm.base_pointer + idx]);
                 break;
             }
 
             case iAdd: {
-                Value b = pop(&vm.stack);
-                Value a = pop(&vm.stack);
-                push(&vm.stack, new_val_num(num_add(a.num, b.num)));
+                Value b = popv(&vm.stack);
+                Value a = popv(&vm.stack);
+                pushv(&vm.stack, new_val_num(num_add(a.num, b.num)));
                 break;
             }
 
             case iSub: {
-                Value b = pop(&vm.stack);
-                Value a = pop(&vm.stack);
-                push(&vm.stack, new_val_num(num_sub(a.num, b.num)));
+                Value b = popv(&vm.stack);
+                Value a = popv(&vm.stack);
+                pushv(&vm.stack, new_val_num(num_sub(a.num, b.num)));
                 break;
             }
 
             case iMul: {
-                Value b = pop(&vm.stack);
-                Value a = pop(&vm.stack);
-                push(&vm.stack, new_val_num(num_mul(a.num, b.num)));
+                Value b = popv(&vm.stack);
+                Value a = popv(&vm.stack);
+                pushv(&vm.stack, new_val_num(num_mul(a.num, b.num)));
                 break;
             }
 
             case iDiv: {
-                Value b = pop(&vm.stack);
-                Value a = pop(&vm.stack);
-                push(&vm.stack, new_val_num(num_div(a.num, b.num)));
+                Value b = popv(&vm.stack);
+                Value a = popv(&vm.stack);
+                pushv(&vm.stack, new_val_num(num_div(a.num, b.num)));
                 break;
             }
 
             case iNeg: {
-                Value a = pop(&vm.stack);
-                push(&vm.stack, new_val_num(num_mul(a.num, new_num_int(-1))));
+                Value a = popv(&vm.stack);
+                pushv(&vm.stack, new_val_num(num_mul(a.num, new_num_int(-1))));
                 break;
             }
 
             case iAnd: {
-                Value b = pop(&vm.stack);
-                Value a = pop(&vm.stack);
-                push(&vm.stack, new_val_bool(a.bool && b.bool));
+                Value b = popv(&vm.stack);
+                Value a = popv(&vm.stack);
+                pushv(&vm.stack, new_val_bool(a.bool && b.bool));
                 break;
             }
 
             case iOr: {
-                Value b = pop(&vm.stack);
-                Value a = pop(&vm.stack);
-                push(&vm.stack, new_val_bool(a.bool || b.bool));
+                Value b = popv(&vm.stack);
+                Value a = popv(&vm.stack);
+                pushv(&vm.stack, new_val_bool(a.bool || b.bool));
                 break;
             }
 
             case iNot: {
-                Value a = pop(&vm.stack);
-                push(&vm.stack, new_val_bool(!a.bool));
+                Value a = popv(&vm.stack);
+                pushv(&vm.stack, new_val_bool(!a.bool));
                 break;
             }
 
             case iEq: {
-                Value b = pop(&vm.stack);
-                Value a = pop(&vm.stack);
+                Value b = popv(&vm.stack);
+                Value a = popv(&vm.stack);
                 if (a.type == VAL_NUM)
-                    push(&vm.stack, new_val_bool(num_eq(a.num, b.num)));
+                    pushv(&vm.stack, new_val_bool(num_eq(a.num, b.num)));
                 else
-                    push(&vm.stack, new_val_bool(a.bool == b.bool));
+                    pushv(&vm.stack, new_val_bool(a.bool == b.bool));
                 break;
             }
 
             case iNeq: {
-                Value b = pop(&vm.stack);
-                Value a = pop(&vm.stack);
+                Value b = popv(&vm.stack);
+                Value a = popv(&vm.stack);
                 if (a.type == VAL_NUM)
-                    push(&vm.stack, new_val_bool(!num_eq(a.num, b.num)));
+                    pushv(&vm.stack, new_val_bool(!num_eq(a.num, b.num)));
                 else
-                    push(&vm.stack, new_val_bool(a.bool != b.bool));
+                    pushv(&vm.stack, new_val_bool(a.bool != b.bool));
                 break;
             }
 
             case iLt: {
-                Value b = pop(&vm.stack);
-                Value a = pop(&vm.stack);
-                push(&vm.stack, new_val_bool(num_lt(a.num, b.num)));
+                Value b = popv(&vm.stack);
+                Value a = popv(&vm.stack);
+                pushv(&vm.stack, new_val_bool(num_lt(a.num, b.num)));
                 break;
             }
 
             case iLte: {
-                Value b = pop(&vm.stack);
-                Value a = pop(&vm.stack);
-                push(&vm.stack, new_val_bool(num_lte(a.num, b.num)));
+                Value b = popv(&vm.stack);
+                Value a = popv(&vm.stack);
+                pushv(&vm.stack, new_val_bool(num_lte(a.num, b.num)));
                 break;
             }
 
             case iGt: {
-                Value b = pop(&vm.stack);
-                Value a = pop(&vm.stack);
-                push(&vm.stack, new_val_bool(num_gt(a.num, b.num)));
+                Value b = popv(&vm.stack);
+                Value a = popv(&vm.stack);
+                pushv(&vm.stack, new_val_bool(num_gt(a.num, b.num)));
                 break;
             }
 
             case iGte: {
-                Value b = pop(&vm.stack);
-                Value a = pop(&vm.stack);
-                push(&vm.stack, new_val_bool(num_gte(a.num, b.num)));
+                Value b = popv(&vm.stack);
+                Value a = popv(&vm.stack);
+                pushv(&vm.stack, new_val_bool(num_gte(a.num, b.num)));
                 break;
             }
 
             case iSave: {
-                Value bp_val = new_val_num(new_num_int((i32)vm.base_pointer));
-                push(&vm.stack, bp_val);
-                vm.base_pointer = vm.stack.count;
+                pushu(&vm.base_stack, vm.base_pointer);
+                vm.base_pointer = vm.locals.count;
+                pushu(&vm.top_stack, vm.stack.count);
                 break;
             }
 
@@ -207,43 +234,63 @@ b32 run(LinkResult res) {
 
                 vm.instr_pointer = vm.return_stack.items[--vm.return_stack.count];
 
-                if (vm.base_pointer == 0)
-                    return false;
-
-                // previous base pointer is stored just before the current frame
-                Value bp_val = vm.stack.items[vm.base_pointer - 1];
-                usize prev_bp = bp_val.num.num_val.i;
-
-                // If there is a return value, move it just above the previous frame
-                if (vm.stack.count > vm.base_pointer) {
-                    Value ret_val = pop(&vm.stack);
-                    vm.stack.count = vm.base_pointer - 1;
-                    vm.base_pointer = prev_bp;
-                    push(&vm.stack, ret_val);
-                } else {
-                    vm.stack.count = vm.base_pointer - 1;
-                    vm.base_pointer = prev_bp;
-                }
+                vm.base_pointer = popu(&vm.base_stack);
+                // usize prev_top_stack = popu(&vm.top_stack);
+                
+                // if (vm.stack.count > prev_top_stack) {
+                //     Value ret_val = popv(&vm.stack);
+                //     vm.stack.count = prev_top_stack;
+                //     pushv(&vm.stack, ret_val);
+                // } else {
+                //     vm.stack.count = prev_top_stack;
+                // }
 
                 break;
             }
 
             case iCall: {
-                printf("Print base ptr before iCall: %zu\n", vm.base_pointer);
-                printf("Print stack before iCall\n");
-                for (usize i = 0; i < vm.stack.count; ++i) {
-                    Value v = vm.stack.items[i];
-                    print_val(v);
+                /* Compute how many argument values were pushed after the last iSave.
+                iSave pushed the previous operand-stack size onto top_stack, so
+                the last entry of top_stack is the operand stack size before
+                arguments were pushed. */
+                usize addr = get_instr(instructions, vm.instr_pointer++);
+
+                if (vm.top_stack.count == 0) {
+                    /* No saved top — calling without prior iSave is an error; handle as you prefer. */
+                    return false;
                 }
 
-                usize addr = get_instr(instructions, vm.instr_pointer++);
-                da_append(&vm.return_stack, vm.instr_pointer);
+                usize prev_stack_count = vm.top_stack.items[vm.top_stack.count - 1];
+                if (vm.stack.count < prev_stack_count) {
+                    /* Shouldn't happen: stack underflow relative to saved top */
+                    return false;
+                }
+
+                usize num_args = vm.stack.count - prev_stack_count;
+
+                /* Move args from operand stack into new locals at base_pointer + i.
+                Arguments order must match the compiler's order. Here we copy them
+                such that the oldest argument is at locals[base + 0], and the last
+                pushed argument is at locals[base + num_args-1]. */
+                for (usize i = 0; i < num_args; ++i) {
+                    /* source index in operand stack */
+                    usize src = prev_stack_count + i;
+                    /* destination local index */
+                    storev(&vm.locals, vm.base_pointer + i, vm.stack.items[src]);
+                }
+
+                /* drop arguments from operand stack (reset to prev saved top) */
+                vm.stack.count = prev_stack_count;
+
+                /* save return address and jump */
+                pushu(&vm.return_stack, vm.instr_pointer);
                 vm.instr_pointer = addr;
                 break;
             }
 
+
             case iPrint: {
-                Value val = pop(&vm.stack);
+                Value val = popv(&vm.stack);
                 print_val(val);
                 break;
             }

@@ -1,8 +1,10 @@
 num a = 5;
 bool b = true;
 
-num f(num c, num b) {
-    return b + c;
+num f(num c, num d) {
+    print c;
+    print d;
+    return d + c;
 }
 
 void main() {
