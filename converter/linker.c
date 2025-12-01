@@ -7,32 +7,6 @@
 #include <stdarg.h>
 
 typedef struct {
-    usize *items;
-    usize count;
-    usize capacity;
-    usize cur;
-} Queue;
-
-void enqueue(Queue *q, usize i) {
-    da_append(q, i);
-}
-
-usize deque(Queue *q) {
-    if (q->cur < q->count) {
-        return q->items[q->cur++];
-    }
-    UNREACHABLE();
-}
-
-usize peek(Queue *q) {
-    return q->items[q->cur];
-}
-
-b32 is_empty(Queue *q) {
-    return q->cur == q->count;
-}
-
-typedef struct {
     b32 in_use;
     usize address;
 } Entry;
@@ -82,6 +56,8 @@ b32 has_arg(Instruction instr) {
            instr == iLoad_Local;
 }
 
+usize end_address = 0;
+
 static usize dfs_link_function(
     usize fn_idx,
     ConversionResult *conv,
@@ -95,30 +71,24 @@ static usize dfs_link_function(
 
     FunctionSymbol *fn = &conv->functions.items[fn_idx];
     usize start_address = write_head;
+    if (end_address < write_head + fn->instructions.count)
+        end_address = write_head + fn->instructions.count;
     
     mark_used(*use_arr, fn_idx);
-    set_address(*use_arr, fn_idx, start_address);
+    set_address(*use_arr, fn_idx, write_head);
 
     usize i = 0;
-    usize to_ret = 0;
     while (i < fn->instructions.count) {
         Instruction instr = fn->instructions.items[i];
         instructions->items[write_head++] = instr;
 
         if (instr == iCall) {
-            // Next instruction is the callee index
-            ++i;
-            usize callee_idx = fn->instructions.items[i];
+            usize callee_idx = fn->instructions.items[++i];
 
-            // Recursively link the callee, get its start address
             usize callee_addr = dfs_link_function(
-                callee_idx, conv, use_arr, instructions, write_head
+                callee_idx, conv, use_arr, instructions, end_address
             );
 
-            if (callee_addr > to_ret) 
-                to_ret = callee_addr;
-
-            // Write the callee's address as the operand
             instructions->items[write_head++] = callee_addr;
         } else if (has_arg(instr)) {
             ++i;
@@ -127,8 +97,7 @@ static usize dfs_link_function(
         ++i;
     }
 
-    // Return the new write_head (end address after this function)
-    return write_head > to_ret ? write_head : to_ret;
+    return start_address;
 }
 
 LinkResult link(ConversionResult conv) {
@@ -173,11 +142,12 @@ LinkResult link(ConversionResult conv) {
     }
 
     // Code from functions
+    end_address = 0;
     for (usize i = 0; i < conv.functions.count; ++i) {
-        usize last = dfs_link_function(i, &conv, &use_arr, &instructions, instructions.count);
-        instructions.count = last;
+        dfs_link_function(i, &conv, &use_arr, &instructions, end_address);
     }
-
+    
+    instructions.count = instructions_len;
     usize first_instr = instructions.count;
 
     // Code to run before calling 'main'
