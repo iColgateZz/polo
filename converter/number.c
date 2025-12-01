@@ -67,3 +67,35 @@ void print_num(Number n) {
         printf("%lf\n", _get_f64(n));
     }
 }
+
+b32 num_eq(Number n1, Number n2) {
+    if (_both_i32(n1, n2)) {
+        return _get_i32(n1) == _get_i32(n2);
+    } else {
+        return _get_as_f64(n1) == _get_as_f64(n2);
+    }
+}
+
+b32 num_lt(Number n1, Number n2) {
+    if (_both_i32(n1, n2)) {
+        return _get_i32(n1) < _get_i32(n2);
+    } else {
+        return _get_as_f64(n1) < _get_as_f64(n2);
+    }
+}
+
+b32 num_gt(Number n1, Number n2) {
+    if (_both_i32(n1, n2)) {
+        return _get_i32(n1) > _get_i32(n2);
+    } else {
+        return _get_as_f64(n1) > _get_as_f64(n2);
+    }
+}
+
+b32 num_lte(Number n1, Number n2) {
+    return num_lt(n1, n2) || num_eq(n1, n2);
+}
+
+b32 num_gte(Number n1, Number n2) {
+    return num_gt(n1, n2) || num_eq(n1, n2);
+}
