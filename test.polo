@@ -1,9 +1,10 @@
-num factorial(num n) {
+num factorial(num n, num c) {
     num b = 5 + 12;
 }
 
 void main() {
     // num b = a;
+    num abqwe = factorial(2, 15);
 }
 
 num a = 3;
