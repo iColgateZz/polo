@@ -373,6 +373,23 @@ AstNode *_check_node(AstNode *node) {
             return _check_node(p->expression);
         }
 
+        case AST_WHILE_STMT: {
+            WhileStmtNode *w = (WhileStmtNode *)node;
+            
+            AstNode *cond_type = _check_node(w->condition);
+            if (cond_type->ast_type != AST_TYPE_BOOL) {
+                _semantic_error("condition in while loop should evaluate to a boolean value");
+                return NULL;
+            }
+
+            return _check_node(w->body);
+        }
+
+        case AST_EXPR_STMT: {
+            ExprStmtNode *e = (ExprStmtNode *)node;
+            return _check_node(e->expression);
+        }
+
         case AST_CALL_EXPR: {
             CallExprNode *call = (CallExprNode *)node;
             IdentifierNode *callee = (IdentifierNode *)call->callee;
@@ -481,8 +498,9 @@ AstNode *_check_node(AstNode *node) {
             AstNode *lhs_type = _check_node(assign->lvalue);
             no_panic(lhs_type);
 
-            if (lhs_type->ast_type != AST_IDENTIFIER) {
-                _semantic_error("cannot assign to an expression");
+            if (assign->lvalue->ast_type != AST_IDENTIFIER) {
+                _semantic_error("cannot assign to an expression. "
+                                "The type was %d", lhs_type->ast_type);
                 return NULL;
             }
 

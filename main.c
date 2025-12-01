@@ -27,7 +27,7 @@ i32 main(void) {
         return -1;
     }
 
-    // print_ast(parse_result.program, 0);
+    print_ast(parse_result.program, 0);
 
     if (semantic_errors(parse_result.program)) {
         return -1;

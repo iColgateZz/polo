@@ -71,6 +71,21 @@ void print_ast(AstNode *node, i32 indent) {
             print_ast(p->expression, indent + 2);
             break;
         }
+        case AST_WHILE_STMT: {
+            WhileStmtNode *w = (WhileStmtNode *)node;
+            _indent(indent); printf("While\n");
+            _indent(indent); printf("Condition\n");
+            print_ast(w->condition, indent + 2);
+            _indent(indent); printf("Body\n");
+            print_ast(w->body, indent + 2);
+            break;
+        }
+        case AST_EXPR_STMT: {
+            ExprStmtNode *e = (ExprStmtNode *)node;
+            _indent(indent); printf("ExprStmt\n");
+            print_ast(e->expression, indent + 2);
+            break;
+        }
         case AST_CALL_EXPR: {
             CallExprNode *call = (CallExprNode *)node;
             _indent(indent); printf("CallExpr\n");

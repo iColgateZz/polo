@@ -1,11 +1,21 @@
 num a = 5;
 bool b = true;
 
-bool f(num a, num b) {
-    return a > b;
+num qwe(num n);
+
+num f(num a, num b) {
+    return qwe(a) + qwe(b);
 }
 
 void main() {
-    num c = a * 7.0 / 3 ;
-    print c;
+    print f(a, 10) < 2 + 15 * 1 + 2;
+}
+
+num qwe(num n) {
+    num i = 0;
+    while (i < 10) {
+        print i;
+        i = i + 1;
+    }
+    return n / 2.0;
 }

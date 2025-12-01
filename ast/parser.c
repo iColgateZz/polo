@@ -87,6 +87,7 @@ static AstNode *parse_arguments(void);
 static AstNode *parse_statement(void);
 static AstNode *parse_return_stmt(void);
 static AstNode *parse_print_stmt(void);
+static AstNode *parse_while_stmt(void);
 
 static inline
 void _synchronize(void) {
@@ -218,6 +219,8 @@ AstNode *parse_statement(void) {
             return parse_block();
         case TOKEN_PRINT: 
             return parse_print_stmt();
+        case TOKEN_WHILE:
+            return parse_while_stmt();
         // case TOKEN_IF: return parse_if_stmt();
         // case TOKEN_FOR: return parse_for_stmt();
         // case TOKEN_WHILE: return parse_while_stmt();
@@ -245,7 +248,8 @@ AstNode *parse_return_stmt(void) {
     return new_return_stmt_node(expr);
 }
 
-static AstNode *parse_print_stmt(void) {
+static 
+AstNode *parse_print_stmt(void) {
     _match(TOKEN_PRINT);
     AstNode *expr = parse_expression();
     no_panic(expr);
@@ -254,6 +258,25 @@ static AstNode *parse_print_stmt(void) {
         return _error(";");
 
     return new_print_stmt_node(expr);
+}
+
+static 
+AstNode *parse_while_stmt(void) {
+    _match(TOKEN_WHILE);
+
+    if (!_match(TOKEN_LEFT_PAREN))
+        return _error("(");
+
+    AstNode *condition = parse_expression();
+    no_panic(condition);
+
+    if (!_match(TOKEN_RIGHT_PAREN))
+        return _error(")");
+
+    AstNode *body = parse_block();
+    no_panic(condition);
+
+    return new_while_stmt_node(condition, body);
 }
 
 static 
