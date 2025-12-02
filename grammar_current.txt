@@ -1,5 +1,4 @@
-type           : baseType | "void" ;
-baseType       : "num" | "string" | "bool" ;
+type           : "num" | "string" | "bool" | "void" ;
 
 program        : declaration* EOF ;
 
@@ -39,8 +38,6 @@ statement      : assignStmt
                | whileStmt
                | forStmt
                | ifStmt
-               | breakStmt
-               | contStmt
                | block ;
 
 assignStmt     : assignment ";" ;
@@ -52,8 +49,6 @@ ifStmt         : "if" "(" expression ")" block ( "elif" "(" expression ")" block
 printStmt      : "print" expression ";" ;
 returnStmt     : "return" expression? ";" ;
 whileStmt      : "while" "(" expression ")" block ;
-breakStmt      : "break" ";" ;
-contStmt       : "continue" ";" ;
 block          : "{" (statement | varDecl)* "}" ;
 
 literal        : NUMBER | STRING | "false" | "true" ;
