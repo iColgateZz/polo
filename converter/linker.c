@@ -177,6 +177,10 @@ LinkResult link(ConversionResult conv) {
     da_append(&instructions, get_address(use_arr, main_idx));
     da_append(&instructions, iHalt);
 
+    da_free(conv.functions);
+    da_free(conv.globals);
+    da_free(conv.instructions);
+
     return (LinkResult) { 
         .constants = conv.constants, 
         .instructions = instructions, 
