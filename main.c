@@ -12,8 +12,14 @@
 
 static inline byte *_read_file(byte *path);
 
-i32 main(void) {
-    byte *source = _read_file("test.polo");
+i32 main(i32 argc, byte *argv[]) {
+    if (argc != 2) {
+        fprintf(stderr, "Usage: %s <source-file>", argv[0]);
+        return -1;
+    }
+
+    byte *file_name = argv[1];
+    byte *source = _read_file(file_name);
 
     ScanResult scan_result = scan(source);
     if (scan_result.error) {
@@ -34,14 +40,14 @@ i32 main(void) {
     }
 
     ConversionResult conv_result = convert(parse_result.program);
-    disassemble(conv_result, "resolved before calling 'main'");
+    // disassemble(conv_result, "resolved before calling 'main'");
 
     LinkResult link_result = link(conv_result);
     if (link_result.error) {
         return -1;
     }
     
-    print_link(link_result);
+    // print_link(link_result);
     
     // scanner is freed
     free(source);

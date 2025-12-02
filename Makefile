@@ -4,7 +4,7 @@ CC=gcc
 SRC := $(shell find . -name "*.c")
 OBJ := $(patsubst %,build/%,$(SRC:.c=.o))
 DEP := $(OBJ:.o=.d)
-EXE := app
+EXE := polo
 
 .PHONY: all clean
 
