@@ -1,0 +1,34 @@
+num fact1(num n) {
+    if (n <= 1) {
+        return 1;
+    }
+    return n * fact1(n - 1);
+}
+
+num fact2(num n) {
+    num a = 1;
+    for (; n > 1; n = n - 1) {
+        a = a * n;
+    }
+    return a;
+}
+
+num fact3(num n) {
+    num a = 1;
+    while (n > 1) {
+        a = a * n;
+        n = n - 1;
+    }
+    return a;
+}
+
+void main() {
+    num a = 5;
+    print fact1(a);
+    print a;
+    print fact2(a);
+    print fact3(a);
+}
+
+
+

@@ -374,7 +374,13 @@ AstNode *_check_node(AstNode *node) {
 
         case AST_PRINT_STMT: {
             PrintStmtNode *p = (PrintStmtNode *)node;
-            return _check_node(p->expression);
+            AstNode *t = _check_node(p->expression);
+
+            if (t->ast_type == AST_TYPE_VOID) {
+                _semantic_error("cannot print argument of void type");
+                return NULL;
+            }
+            return NULL;
         }
 
         case AST_WHILE_STMT: {

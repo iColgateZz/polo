@@ -1,17 +1,15 @@
-num qwe(num n) {
-    print "Here we got n";
-    print n;
-    print "Start if";
-    if (n < 2) {
-        return 5;
-    } elif (n > 5) {
-        return 10;
-    } else {
-        print "hello";
+num factorial(num n) {
+    if (n <= 1) {
+        return 1;
     }
-    return 2;
+    return n * factorial(n - 1);
 }
 
-void main() {
-    print qwe(6);
+num fact(num n) {
+    num a = 1;
+    for (; n > 1; n = n - 1) {
+        a = a * n;
+    }
+    return a;
 }
+
