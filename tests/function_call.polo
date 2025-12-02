@@ -1,0 +1,22 @@
+num a = 5;
+num b = 6;
+
+bool cmp() {
+    return a > b;
+}
+
+num whatever() {
+    if (cmp()) {
+        print "something";
+        return 5;
+    } else {
+        print "nothing";
+        return 10;
+    }
+}
+
+void main() {
+    print whatever();
+    a = 7;
+    print whatever();
+}

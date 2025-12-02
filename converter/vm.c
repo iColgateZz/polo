@@ -104,7 +104,11 @@ b32 run(LinkResult res) {
 
             case iStore_Local: {
                 usize idx = get_instr(instructions, vm.instr_pointer++);
-                storev(&vm.locals, vm.base_pointer + idx, popv(&vm.stack));
+                if (idx >= vm.locals.count) {
+                    pushv(&vm.locals, popv(&vm.stack));
+                } else {
+                    storev(&vm.locals, vm.base_pointer + idx, popv(&vm.stack));
+                }
                 break;
             }
 
@@ -217,8 +221,6 @@ b32 run(LinkResult res) {
             }
 
             case iSave: {
-                pushu(&vm.base_stack, vm.base_pointer);
-                vm.base_pointer = vm.locals.count;
                 pushu(&vm.top_stack, vm.stack.count);
                 break;
             }
@@ -228,13 +230,15 @@ b32 run(LinkResult res) {
                     UNREACHABLE();
 
                 vm.instr_pointer = vm.return_stack.items[--vm.return_stack.count];
-
+                vm.locals.count = vm.base_pointer;
                 vm.base_pointer = popu(&vm.base_stack);
                 break;
             }
 
             case iCall: {
                 usize addr = get_instr(instructions, vm.instr_pointer++);
+                pushu(&vm.base_stack, vm.base_pointer);
+                vm.base_pointer = vm.locals.count;
 
                 if (vm.top_stack.count == 0) {
                     UNREACHABLE();
@@ -249,7 +253,7 @@ b32 run(LinkResult res) {
                 usize num_args = vm.stack.count - prev_stack_count;
                 for (usize i = 0; i < num_args; ++i) {
                     usize src = prev_stack_count + i;
-                    storev(&vm.locals, vm.base_pointer + i, vm.stack.items[src]);
+                    pushv(&vm.locals, vm.stack.items[src]);
                 }
 
                 // reset stack to the pre-argument-passing size

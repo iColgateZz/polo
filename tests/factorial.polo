@@ -25,7 +25,6 @@ num fact3(num n) {
 void main() {
     num a = 5;
     print fact1(a);
-    print a;
     print fact2(a);
     print fact3(a);
 }
