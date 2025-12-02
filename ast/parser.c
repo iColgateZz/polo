@@ -88,6 +88,7 @@ static AstNode *parse_statement(void);
 static AstNode *parse_return_stmt(void);
 static AstNode *parse_print_stmt(void);
 static AstNode *parse_while_stmt(void);
+static AstNode *parse_assignment_stmt(void);
 
 static inline
 void _synchronize(void) {
@@ -221,19 +222,24 @@ AstNode *parse_statement(void) {
             return parse_print_stmt();
         case TOKEN_WHILE:
             return parse_while_stmt();
+        case TOKEN_IDENTIFIER_LITERAL: {
+            if (_look(1).type == TOKEN_LEFT_PAREN)
+                break;
+            return parse_assignment_stmt();
+        }
         // case TOKEN_IF: return parse_if_stmt();
         // case TOKEN_FOR: return parse_for_stmt();
-        // case TOKEN_WHILE: return parse_while_stmt();
         // case TOKEN_BREAK: return parse_break_stmt();
         // case TOKEN_CONTINUE: return parse_continue_stmt();
-        default: {
-            AstNode *expr = parse_expression();
-            no_panic(expr);
-            if (!_match(TOKEN_SEMICOLON))
-                return _error("';'");
-            return new_expr_stmt_node(expr);
-        }
+        default: break;
     }
+    AstNode *expr = parse_expression();
+    no_panic(expr);
+
+    if (!_match(TOKEN_SEMICOLON))
+        return _error("';'");
+
+    return new_expr_stmt_node(expr);
 }
 
 static 
@@ -277,6 +283,25 @@ AstNode *parse_while_stmt(void) {
     no_panic(condition);
 
     return new_while_stmt_node(condition, body);
+}
+
+static
+AstNode *parse_assignment_stmt(void) {
+    Token t = _peek();
+    _match(TOKEN_IDENTIFIER_LITERAL);
+    AstNode *lvalue = new_identifier_node(t);
+    no_panic(lvalue);
+
+    if (!_match(TOKEN_EQUAL)) 
+        return _error("=");
+
+    AstNode *rvalue = parse_assignment();
+    no_panic(rvalue);
+
+    if (!_match(TOKEN_SEMICOLON))
+        return _error(";");
+    
+    return new_assign_stmt_node(lvalue, rvalue);
 }
 
 static 

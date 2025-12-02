@@ -390,6 +390,22 @@ AstNode *_check_node(AstNode *node) {
             return _check_node(e->expression);
         }
 
+        case AST_ASSIGN_STMT: {
+            AssignStmtNode *a = (AssignStmtNode *)node;
+            AstNode *lval_type = _check_node(a->lvalue);
+            no_panic(lval_type);
+            AstNode *rval_type = _check_node(a->value);
+            no_panic(rval_type);
+
+            if (!_types_compatible(lval_type, rval_type)) {
+                _semantic_error("type mismatch in assignment stmt at line %d", 
+                    ((IdentifierNode *)a->lvalue)->name.line);
+                return NULL;
+            }
+
+            return NULL;
+        }
+
         case AST_CALL_EXPR: {
             CallExprNode *call = (CallExprNode *)node;
             IdentifierNode *callee = (IdentifierNode *)call->callee;

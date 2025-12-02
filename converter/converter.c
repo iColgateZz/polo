@@ -256,6 +256,23 @@ void _convert(AstNode *node) {
             break;
         }
 
+        case AST_ASSIGN_STMT: {
+            AssignStmtNode *a = (AssignStmtNode *)node;
+            _convert(a->value);
+
+            IdentifierNode *id = (IdentifierNode *)a->lvalue;
+            isize local_idx = _lookup_local(id->name);
+            if (local_idx >= 0) {
+                _append_i(iStore_Local);
+                _append_i(local_idx);
+            } else {
+                usize global_idx = _find_global(id->name.str);
+                _append_i(iStore_Global);
+                _append_i(global_idx);
+            }
+            break;
+        }
+
         case AST_CALL_EXPR: {
             CallExprNode *call = (CallExprNode *)node;
             IdentifierNode *callee = (IdentifierNode *)call->callee;
