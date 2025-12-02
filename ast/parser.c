@@ -630,11 +630,5 @@ ParseResult parse(TokenArray tokens) {
 }
 
 void free_ast(AstNode *program) {
-    // free da arrays
-    // Later when there are more nodes with da arrays
-    // I should probably store refs to the arrays 
-    // to simplify freeing. 
-    ProgramNode *p = (ProgramNode *)program;
-    free(p->declarations.items);
     free_special_nodes();
 }

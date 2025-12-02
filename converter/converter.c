@@ -514,5 +514,9 @@ ConversionResult convert(AstNode *program) {
     _init_converter();
     _init_info();
     _convert(program);
+
+    if (info.locals.items)
+        da_free(info.locals);
+
     return res;
 }

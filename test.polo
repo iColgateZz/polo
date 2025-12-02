@@ -13,5 +13,5 @@ num qwe(num n) {
 }
 
 void main() {
-    qwe(6);
+    print qwe(6);
 }

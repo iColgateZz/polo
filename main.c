@@ -40,12 +40,15 @@ i32 main(void) {
     if (link_result.error) {
         return -1;
     }
-
+    
     print_link(link_result);
+    
+    // scanner is freed
+    free(source);
+    free(scan_result.tokens.items);
 
-    // free(source);
-    // free(scan_result.tokens.items);
-    // free_ast(parse_result.program);
+    // ast is freed
+    free_ast(parse_result.program);
 
     run(link_result);
     return 0;

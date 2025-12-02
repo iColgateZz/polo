@@ -3,27 +3,35 @@
 #include <stdlib.h>
 #include "da.h"
 
-typedef struct {
-    void **items;
-    usize capacity;
-    usize count;
-} PointerArray;
-
-static PointerArray array;
+static AstNodeArray array;
 
 void init_special_nodes(void) {
-    array = (PointerArray) {0};
+    array = (AstNodeArray) {0};
+}
+
+static inline
+b32 _has_array(AstNodeType t) {
+    return t == AST_PARAMETER_LIST   ||
+           t == AST_ARGUMENT_LIST    ||
+           t == AST_ELIF_CLAUSE_LIST ||
+           t == AST_BLOCK            ||
+           t == AST_PROGRAM;
 }
 
 void free_special_nodes(void) { 
     for (usize i = 0; i < array.count; ++i) {
-        free(array.items[i]);
+        AstNode *item = array.items[i];
+        if (_has_array(item->ast_type)) {
+            BlockNode *b = (BlockNode *)item;
+            da_free(b->statements);
+        }
+        free(item);
     }
     free(array.items);
 }
 
 void *my_malloc(usize x) {
-    void *n = malloc(x);
+    AstNode *n = malloc(x);
     if (!n) {
         fprintf(stderr, "Buy more RAM, %s, %d\n", __FILE__, __LINE__);
         exit(-1);

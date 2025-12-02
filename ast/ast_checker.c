@@ -692,6 +692,18 @@ AstNode *_check_node(AstNode *node) {
     }
 }
 
+void _free_checker(void) {
+    if (global_symbols.count > 0) {
+        da_free(global_symbols);
+    }
+    if (global_functions.count > 0) {
+        da_free(global_functions);
+    }
+    if (local_symbols.count > 0) {
+        da_free(local_symbols);
+    }
+}
+
 b32 semantic_errors(AstNode *program) {
     _init_checker();
     _init_global();
@@ -699,6 +711,8 @@ b32 semantic_errors(AstNode *program) {
     _init_local();
 
     _check_node(program);
+
+    _free_checker();
 
     return checker.error;
 }

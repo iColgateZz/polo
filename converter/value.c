@@ -1,5 +1,7 @@
 #include "value.h"
 #include "macros.h"
+#include <stdlib.h>
+#include <string.h>
 
 Value new_val_bool(b32 val) {
     return (Value) {
@@ -16,9 +18,13 @@ Value new_val_num(Number val) {
 }
 
 Value new_val_str(s8 val) {
+    void *str = malloc(val.len);
+    if (!str) UNREACHABLE();
+
+    memcpy(str, val.s, val.len);
     return (Value) {
         .type = VAL_STR,
-        .str = val
+        .str = s8(str, val.len)
     };
 }
 
