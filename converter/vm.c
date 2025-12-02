@@ -55,11 +55,6 @@ usize popu(UsizeStack *a) {
 }
 
 static inline
-void storeu(UsizeStack *a, usize idx, usize val) {
-    a->items[idx] = val;
-}
-
-static inline
 Instruction get_instr(InstructionSet i, usize idx) {
     return i.items[idx];
 }

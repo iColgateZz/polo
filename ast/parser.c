@@ -2,6 +2,7 @@
 #include "special_nodes.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include "macros.h"
 #include "da.h"
 
 typedef struct {
@@ -630,5 +631,6 @@ ParseResult parse(TokenArray tokens) {
 }
 
 void free_ast(AstNode *program) {
+    UNUSED(program);
     free_special_nodes();
 }

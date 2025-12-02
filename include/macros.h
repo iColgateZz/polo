@@ -17,4 +17,6 @@
 
 #define bool_str(i) ((i) ? "true" : "false")
 
+#define UNUSED(x)   (void)x
+
 #endif

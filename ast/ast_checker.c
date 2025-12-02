@@ -405,7 +405,7 @@ AstNode *_check_node(AstNode *node) {
             }
 
             AstNode *increment = _check_node(f->increment);
-            no_panic(cond_type);
+            no_panic(increment);
             rm_scope();
             return _check_node(f->body);
         }
