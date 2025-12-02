@@ -277,6 +277,8 @@ b32 run(LinkResult res) {
                 if (vm.stack.count == 0) break;
 
                 Value val = popv(&vm.stack);
+                if (val.type != VAL_BOOL) break;
+
                 if (!val.bool) {
                     vm.instr_pointer = addr;
                 }
