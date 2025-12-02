@@ -1,11 +1,9 @@
 void qwe(num n) {
     num i = 0;
-    while (i < n) {
-        num b = i + 1;
-        i = i + 1;
+    for (;;) {
         print i;
-        print b;
     }
+    print i;
 }
 
 void main() {

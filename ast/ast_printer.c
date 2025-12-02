@@ -95,6 +95,19 @@ void print_ast(AstNode *node, i32 indent) {
             print_ast(a->value, indent + 4);
             break;
         }
+        case AST_FOR_STMT: {
+            ForStmtNode *f = (ForStmtNode *)node;
+            _indent(indent); printf("For\n");
+            _indent(indent); printf("Initializer\n");
+            print_ast(f->init, indent + 2);
+            _indent(indent); printf("Condition\n");
+            print_ast(f->condition, indent + 2);
+            _indent(indent); printf("Increment\n");
+            print_ast(f->increment, indent + 2);
+            _indent(indent); printf("Body\n");
+            print_ast(f->body, indent + 2);
+            break;
+        }
         case AST_CALL_EXPR: {
             CallExprNode *call = (CallExprNode *)node;
             _indent(indent); printf("CallExpr\n");

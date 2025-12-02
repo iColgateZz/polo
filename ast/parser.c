@@ -89,6 +89,8 @@ static AstNode *parse_return_stmt(void);
 static AstNode *parse_print_stmt(void);
 static AstNode *parse_while_stmt(void);
 static AstNode *parse_assignment_stmt(void);
+static AstNode *parse_for_stmt(void);
+static AstNode *parse_expr_stmt(void);
 
 static inline
 void _synchronize(void) {
@@ -227,19 +229,14 @@ AstNode *parse_statement(void) {
                 break;
             return parse_assignment_stmt();
         }
+        case TOKEN_FOR: 
+            return parse_for_stmt();
         // case TOKEN_IF: return parse_if_stmt();
-        // case TOKEN_FOR: return parse_for_stmt();
         // case TOKEN_BREAK: return parse_break_stmt();
         // case TOKEN_CONTINUE: return parse_continue_stmt();
         default: break;
     }
-    AstNode *expr = parse_expression();
-    no_panic(expr);
-
-    if (!_match(TOKEN_SEMICOLON))
-        return _error("';'");
-
-    return new_expr_stmt_node(expr);
+    return parse_expr_stmt();
 }
 
 static 
@@ -302,6 +299,56 @@ AstNode *parse_assignment_stmt(void) {
         return _error(";");
     
     return new_assign_stmt_node(lvalue, rvalue);
+}
+
+static 
+AstNode *parse_expr_stmt(void) {
+    AstNode *expr = parse_expression();
+    no_panic(expr);
+
+    if (!_match(TOKEN_SEMICOLON))
+        return _error("';'");
+
+    return new_expr_stmt_node(expr);
+}
+
+static 
+AstNode *parse_for_stmt(void) {
+    _match(TOKEN_FOR);
+
+    if (!_match(TOKEN_LEFT_PAREN))
+        return _error("(");
+    
+    AstNode *first = NULL;
+    if (_is_type(_peek())) {
+        first = parse_var_decl();
+    } else if (!_match(TOKEN_SEMICOLON)) {
+        first = parse_assignment_stmt();
+    }
+    no_panic(first);
+
+    AstNode *second = NULL;
+    if (_peek().type != TOKEN_SEMICOLON) {
+        second = parse_expression();
+    }
+    no_panic(second);
+
+    if (!_match(TOKEN_SEMICOLON))
+        return _error(";");
+
+    AstNode *third = NULL;
+    if (_peek().type != TOKEN_RIGHT_PAREN) {
+        third = parse_expression();
+    }
+    no_panic(third);
+
+    if (!_match(TOKEN_RIGHT_PAREN))
+        return _error(")");
+
+    AstNode *body = parse_block();
+    no_panic(body);
+
+    return new_for_stmt_node(first, second, third, body);
 }
 
 static 

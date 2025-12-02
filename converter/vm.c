@@ -274,6 +274,8 @@ b32 run(LinkResult res) {
 
             case iJmpZ: {
                 usize addr = get_instr(instructions, vm.instr_pointer++);
+                if (vm.stack.count == 0) break;
+
                 Value val = popv(&vm.stack);
                 if (!val.bool) {
                     vm.instr_pointer = addr;

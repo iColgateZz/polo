@@ -250,6 +250,29 @@ void _convert(AstNode *node) {
             break;
         }
 
+        case AST_FOR_STMT: {
+            ForStmtNode *f = (ForStmtNode *)node;
+            _convert(f->init);
+
+            usize start_label = _get_label();
+            // eval condition
+            _convert(f->condition);
+            _append_i(iJmpZ);
+            usize lbl_end_idx = _get_label();
+            // append instruction to occupy space
+            _append_i(iJmpZ);
+
+            _convert(f->body);
+            _convert(f->increment);
+            _append_i(iJmp);
+            _append_i(start_label);
+
+            usize end_label = _get_label();
+            // fix jump to end_label
+            res.functions.items[info.fn_idx].instructions.items[lbl_end_idx] = end_label;
+            break;
+        }
+
         case AST_EXPR_STMT: {
             ExprStmtNode *e = (ExprStmtNode *)node;
             _convert(e->expression);

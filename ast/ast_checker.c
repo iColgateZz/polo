@@ -378,11 +378,32 @@ AstNode *_check_node(AstNode *node) {
             
             AstNode *cond_type = _check_node(w->condition);
             if (cond_type->ast_type != AST_TYPE_BOOL) {
-                _semantic_error("condition in while loop should evaluate to a boolean value");
+                _semantic_error("condition in while loop must evaluate to a boolean value");
                 return NULL;
             }
 
             return _check_node(w->body);
+        }
+
+        case AST_FOR_STMT: {
+            ForStmtNode *f = (ForStmtNode *)node;
+            scope();
+            AstNode *init = _check_node(f->init);
+            no_panic(init);
+
+            AstNode *cond_type = _check_node(f->condition);
+            no_panic(cond_type);
+            if (cond_type) {
+                if (cond_type->ast_type != AST_TYPE_BOOL) {
+                    _semantic_error("condition in for loop must evaluate to a boolean value");
+                    return NULL;
+                }
+            }
+
+            AstNode *increment = _check_node(f->increment);
+            no_panic(cond_type);
+            rm_scope();
+            return _check_node(f->body);
         }
 
         case AST_EXPR_STMT: {

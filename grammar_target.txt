@@ -34,11 +34,11 @@ primary        : literal
 
 statement      : assignStmt
                | exprStmt
-               | forStmt
-               | ifStmt
                | printStmt
                | returnStmt
                | whileStmt
+               | forStmt
+               | ifStmt
                | breakStmt
                | contStmt
                | block ;
