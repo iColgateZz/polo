@@ -1,0 +1,12 @@
+void printMsg(string msg) {
+    print msg;
+}
+
+num main() {
+    string s = "Hello, World!";
+    print s;
+
+    printMsg("Test message");
+
+    return 0;
+}

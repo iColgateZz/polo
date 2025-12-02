@@ -1,0 +1,8 @@
+num main() {
+    for (num i = 0; i < 10; i = i + 1) {
+        for (num j = i + 1; j < 10; j = j + 1) {
+            print i * 10 + j;
+        }
+    }
+    return 0;
+}

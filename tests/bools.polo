@@ -1,0 +1,21 @@
+bool testCompare() {
+    num a = 5;
+    num b = 8;
+
+    print a < b;     // true
+    print a <= b;    // true
+    print a > b;     // false
+    print a >= b;    // false
+    print a == 5;    // true
+    print a != 6;    // true
+
+    return true;
+}
+
+bool main() {
+    testCompare();
+    print true or false; // true
+    print false and true; // false
+    print !(false); // true
+    return false;
+}

@@ -1,0 +1,17 @@
+num a = 5;
+
+num f();
+
+num b = f();
+num c = f();
+num d = f();
+
+void main() {
+    print b;
+    print c;
+    print d;
+}
+
+num f() {
+    return (a = a + 1);
+}

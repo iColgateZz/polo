@@ -1,0 +1,19 @@
+num main() {
+    num x = 10;
+    print x;  // 10
+
+    {
+        x = 25;
+        print x;  // 25
+
+        {
+            x = 99;
+            print x; // 99
+        }
+
+        print x;  // 25 again
+    }
+
+    print x; // 10 again
+    return 0;
+}

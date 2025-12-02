@@ -1,0 +1,7 @@
+num main() {
+    num a = 5;
+    num b = 10;
+    num c = a * b + 3 * (a - 2);
+    print c;      // expected: 5*10 + 3*(3) = 50 + 9 = 59
+    return 0;
+}

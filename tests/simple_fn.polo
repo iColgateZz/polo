@@ -1,0 +1,17 @@
+num add(num a, num b) {
+    return a + b;
+}
+
+bool isPositive(num x) {
+    return x > 0;
+}
+
+num main() {
+    num r = add(3, 7);
+    print r;       // 10
+
+    print isPositive(r); // true
+    print isPositive(-1); // false
+
+    return 0;
+}
