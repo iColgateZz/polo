@@ -273,6 +273,69 @@ void _convert(AstNode *node) {
             break;
         }
 
+        case AST_IF_STMT: {
+            struct {
+                usize *items;
+                usize count;
+                usize capacity;
+            } end_indexes = {0};
+
+            IfStmtNode *i = (IfStmtNode *)node;
+
+            _convert(i->condition);
+
+            _append_i(iJmpZ);
+            usize end_idx = _get_label();
+            // append instruction to occupy space
+            _append_i(iJmpZ);
+
+            _convert(i->then_block);
+            _append_i(iJmp);
+            da_append(&end_indexes, _get_label());
+            // append instruction to occupy space
+            _append_i(iJmp);
+
+            usize end_label = _get_label();
+            // fix jump to end_label for if-then block
+            res.functions.items[info.fn_idx].instructions.items[end_idx] = end_label;
+
+            if (i->elifs) {
+                AstNodeArray elifs = ((ElifClauseListNode *)i->elifs)->elifs;
+                for (usize i = 0; i < elifs.count; ++i) {
+                    ElifClauseNode *elif = (ElifClauseNode *)elifs.items[i];
+                    _convert(elif->condition);
+
+                    _append_i(iJmpZ);
+                    end_idx = _get_label();
+                    // append instruction to occupy space
+                    _append_i(iJmpZ);
+
+                    _convert(elif->block);
+                    _append_i(iJmp);
+                    da_append(&end_indexes, _get_label());
+                    // append instruction to occupy space
+                    _append_i(iJmp);
+
+                    end_label = _get_label();
+                    // fix jump to end_label for elif-then block
+                    res.functions.items[info.fn_idx].instructions.items[end_idx] = end_label;
+                }
+            }
+
+            if (i->else_block) {
+                _convert(i->else_block);
+            }
+
+            usize absolute_end = _get_label();
+            for (usize i = 0; i < end_indexes.count; ++i) {
+                res.functions.items[info.fn_idx].instructions.items[end_indexes.items[i]] = absolute_end;
+            }
+
+            da_free(end_indexes);
+
+            break;
+        }
+
         case AST_EXPR_STMT: {
             ExprStmtNode *e = (ExprStmtNode *)node;
             _convert(e->expression);

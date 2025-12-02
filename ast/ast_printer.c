@@ -108,6 +108,32 @@ void print_ast(AstNode *node, i32 indent) {
             print_ast(f->body, indent + 2);
             break;
         }
+        case AST_IF_STMT: {
+            IfStmtNode *i = (IfStmtNode *)node;
+            _indent(indent); printf("If\n");
+            _indent(indent); printf("Condition\n");
+            print_ast(i->condition, indent + 2);
+            _indent(indent); printf("Then\n");
+            print_ast(i->then_block, indent + 2);
+
+            if (i->elifs) {
+                AstNodeArray elifs = ((ElifClauseListNode *)i->elifs)->elifs;
+                for (usize i = 0; i < elifs.count; ++i) {
+                    ElifClauseNode *elif = (ElifClauseNode *)elifs.items[i];
+                    _indent(indent); printf("Elif\n");
+                    _indent(indent); printf("Condition\n");
+                    print_ast(elif->condition, indent + 2);
+                    _indent(indent); printf("Then\n");
+                    print_ast(elif->block, indent + 2);
+                }
+            }
+
+            if (i->else_block) {
+                _indent(indent); printf("Else\n");
+                print_ast(i->else_block, indent + 2);
+            }
+            break;
+        }
         case AST_CALL_EXPR: {
             CallExprNode *call = (CallExprNode *)node;
             _indent(indent); printf("CallExpr\n");

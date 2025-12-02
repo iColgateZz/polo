@@ -128,7 +128,11 @@ static void _push_local(LocalSymbol local) {
 }
 
 static LocalSymbol _new_local(Token name, AstNode *type) {
-    return (LocalSymbol) {.name = name, .type = type, .scope = checker.scope };
+    return (LocalSymbol) {
+        .name = name,
+        .type = type,
+        .scope = checker.scope,
+    };
 }
 
 static AstNode *_lookup_local(Token name) {
@@ -422,6 +426,40 @@ AstNode *_check_node(AstNode *node) {
                 _semantic_error("type mismatch in assignment stmt at line %d", 
                     ((IdentifierNode *)a->lvalue)->name.line);
                 return NULL;
+            }
+
+            return NULL;
+        }
+
+        case AST_IF_STMT: {
+            IfStmtNode *i = (IfStmtNode *)node;
+
+            AstNode *if_cond = _check_node(i->condition);
+            no_panic(if_cond);
+            if (if_cond->ast_type != AST_TYPE_BOOL) {
+                _semantic_error("condition in if stmt must evaluate to a boolean value");
+                return NULL;
+            }
+
+            _check_node(i->then_block);
+
+            if (i->elifs) {
+                AstNodeArray elifs = ((ElifClauseListNode *)i->elifs)->elifs;
+                for (usize i = 0; i < elifs.count; ++i) {
+                    ElifClauseNode *elif = (ElifClauseNode *)elifs.items[i];
+                    AstNode *elif_cond = _check_node(elif->condition);
+                    no_panic(elif_cond);
+                    if (elif_cond->ast_type != AST_TYPE_BOOL) {
+                        _semantic_error("condition in elif stmt must evaluate to a boolean value");
+                        return NULL;
+                    }
+
+                    _check_node(elif->block);
+                }
+            }
+
+            if (i->else_block) {
+                _check_node(i->else_block);
             }
 
             return NULL;

@@ -91,6 +91,7 @@ static AstNode *parse_while_stmt(void);
 static AstNode *parse_assignment_stmt(void);
 static AstNode *parse_for_stmt(void);
 static AstNode *parse_expr_stmt(void);
+static AstNode *parse_if_stmt(void);
 
 static inline
 void _synchronize(void) {
@@ -231,7 +232,8 @@ AstNode *parse_statement(void) {
         }
         case TOKEN_FOR: 
             return parse_for_stmt();
-        // case TOKEN_IF: return parse_if_stmt();
+        case TOKEN_IF: 
+            return parse_if_stmt();
         // case TOKEN_BREAK: return parse_break_stmt();
         // case TOKEN_CONTINUE: return parse_continue_stmt();
         default: break;
@@ -349,6 +351,49 @@ AstNode *parse_for_stmt(void) {
     no_panic(body);
 
     return new_for_stmt_node(first, second, third, body);
+}
+
+static
+AstNode *parse_if_stmt(void) {
+    _match(TOKEN_IF);
+
+    if (!_match(TOKEN_LEFT_PAREN))
+        return _error("(");
+
+    AstNode *if_cond = parse_expression();
+    no_panic(if_cond);
+
+    if (!_match(TOKEN_RIGHT_PAREN))
+        return _error(")");
+
+    AstNode *then_block = parse_block();
+    no_panic(then_block);
+
+    AstNodeArray elifs = {0};
+    while (_match(TOKEN_ELIF)) {
+        if (!_match(TOKEN_LEFT_PAREN))
+            return _error("(");
+
+        AstNode *elif_cond = parse_expression();
+        no_panic(elif_cond);
+
+        if (!_match(TOKEN_RIGHT_PAREN))
+            return _error(")");
+
+        AstNode *elif_then_block = parse_block();
+        no_panic(elif_then_block);
+        
+        da_append(&elifs, new_elif_clause_node(elif_cond, elif_then_block));
+    }
+    
+    AstNode *else_block = NULL;
+    if (_match(TOKEN_ELSE)) {
+        else_block = parse_block();
+        no_panic(else_block);
+    }
+
+    AstNode *elif_node = elifs.count == 0 ? NULL : new_elif_clause_list_node(elifs);
+    return new_if_stmt_node(if_cond, then_block, elif_node, else_block);
 }
 
 static 
