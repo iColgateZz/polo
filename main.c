@@ -47,7 +47,7 @@ i32 main(i32 argc, byte *argv[]) {
         return -1;
     }
     
-    print_link(link_result);
+    // print_link(link_result);
     
     // scanner is freed
     free(source);

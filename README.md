@@ -10,6 +10,14 @@ To compile the Polo compiler and VM, use the standard make command:
 make
 ```
 
+## Running Code
+
+To run code in file.polo, use the following command:
+
+```bash
+./polo file.polo
+```
+
 ## Language Overview
 
 Polo is a statically typed language with a straightforward syntax. It supports a variety of programming constructs and features:

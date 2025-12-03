@@ -1,3 +1,4 @@
+// Calculate factorial
 num factorial(num n) {
     if (n <= 1) {
         return 1;
@@ -5,11 +6,7 @@ num factorial(num n) {
     return n * factorial(n - 1);
 }
 
-num fact(num n) {
-    num a = 1;
-    for (; n > 1; n = n - 1) {
-        a = a * n;
-    }
-    return a;
+void main() {
+    num result = factorial(5);
+    print result;  // Outputs: 120
 }
-
