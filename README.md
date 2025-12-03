@@ -68,19 +68,6 @@ Polo is a statically typed language with a straightforward syntax. It supports a
 ### Comments
 - Single-line comments for code documentation //
 
-## Architecture
-
-Polo uses a multi-stage compilation process:
-
-1. **Scanner**: Converts source code into a stream of tokens
-2. **Parser**: Transforms tokens into an Abstract Syntax Tree (AST)
-3. **Error Checker**: Validates the AST for semantic correctness
-4. **Compiler**: Translates the AST into an intermediate representation (IR)
-5. **Linker**: Resolves references within the IR
-6. **Virtual Machine**: Executes the linked IR
-
-For details on the language grammar, see the `grammar_current.txt` file included in the repository.
-
 ## Example Program
 
 ```
@@ -99,6 +86,19 @@ void main() {
 ```
 
 More examples can be found in the `examples` folder.
+For details on the language grammar, see the `grammar_current.txt` file included in the repository.
+
+## Architecture
+
+Polo uses a multi-stage compilation process:
+
+1. **Scanner**: Converts source code into a stream of tokens
+2. **Parser**: Transforms tokens into an Abstract Syntax Tree (AST)
+3. **Error Checker**: Validates the AST for semantic correctness
+4. **Compiler**: Translates the AST into an intermediate representation (IR)
+5. **Linker**: Resolves references within the IR
+6. **Virtual Machine**: Executes the linked IR
+
 
 ## Lessons Learned & Future Development
 
