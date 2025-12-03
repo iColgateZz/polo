@@ -12,7 +12,7 @@ make
 
 ## Running Code
 
-To run code in file.polo, use the following command:
+To run code in `file.polo`, use the following command:
 
 ```bash
 ./polo file.polo
@@ -79,3 +79,43 @@ void main() {
     print result;  // Outputs: 120
 }
 ```
+
+More examples can be found in the `tests` folder.
+
+## Lessons Learned & Future Development
+
+### What I Learned
+
+Developing Polo has been an educational journey that provided deep insights into several areas:
+
+1. **Compiler Design**: I gained hands-on experience with the entire compilation pipeline from lexical analysis to code generation, understanding how programming languages are implemented at a fundamental level.
+
+2. **Language Design**: Balancing simplicity with expressiveness is challenging. Every design decision impacts both the language's usability and implementation complexity.
+
+3. **Virtual Machine Implementation**: Building a bytecode VM taught me about runtime environments, instruction sets, and stack-based execution models.
+
+4. **Error Handling**: Creating meaningful error messages and recovery mechanisms is as important as the language features themselves.
+
+### Future Enhancements
+
+There are several exciting features that could be added to Polo:
+
+1. **Composite Data Types**:
+   - Arrays and array indexing
+   - Structs for custom data types
+
+2. **Advanced Function Features**:
+   - First-class functions with function type syntax (`fn (num, bool) -> string`)
+
+3. **Module System**:
+   - Import statements for code organization and reusability
+
+4. **Standard Library**:
+    - File IO
+    - String manipulation
+    - Advanced mathematical operations
+
+5. **Control Flow**:
+   - `break` and `continue` statements for loop control
+
+These additions would transform Polo from a simple language into a more powerful general-purpose language while maintaining its clean syntax and approachable nature.
