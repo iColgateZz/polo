@@ -1,5 +1,0 @@
-ops_stack = [5]
-locals =    []
-base_stack= []
-top_stack = []
-base_ptr = 0;

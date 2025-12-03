@@ -1,19 +1,9 @@
 num main() {
-    num x = 10;
-    print x;  // 10
-
     {
-        x = 25;
-        print x;  // 25
-
         {
-            x = 99;
-            print x; // 99
+            num y = 0;
         }
-
-        print x;  // 25 again
+        print y;
     }
-
-    print x; // 10 again
     return 0;
 }

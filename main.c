@@ -56,6 +56,9 @@ i32 main(i32 argc, byte *argv[]) {
     // ast is freed
     free_ast(parse_result.program);
 
+    // DS from converter are freed in linker.
+    // DS from linker live as long as the vm runs.
+
     run(link_result);
     return 0;
 }

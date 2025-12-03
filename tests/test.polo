@@ -1,0 +1,9 @@
+num f() {
+    return 5;
+}
+
+num main() {
+    print f() + f();
+    num a = 5 + 3;
+    return 0;
+}
