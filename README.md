@@ -9,19 +9,16 @@
 
 Polo is a general-purpose programming language designed with simplicity and expressiveness in mind. It offers a clean syntax with static typing, allowing developers to write concise yet readable code. Polo is built with a complete compiler pipeline from lexical analysis to bytecode execution.
 
-## Quick Start
+## Architecture
 
-```bash
-# Clone the repository
-git clone https://github.com/yourusername/polo.git
-cd polo
+Polo uses a multi-stage compilation process:
 
-# Build the compiler
-make
-
-# Run the hello world example
-./polo examples/hello.polo
-```
+1. **Scanner**: Converts source code into a stream of tokens
+2. **Parser**: Transforms tokens into an Abstract Syntax Tree (AST)
+3. **Error Checker**: Validates the AST for semantic correctness
+4. **Compiler**: Translates the AST into an intermediate representation (IR)
+5. **Linker**: Resolves references within the IR
+6. **Virtual Machine**: Executes the linked IR
 
 ## Technical Highlights
 
@@ -35,6 +32,20 @@ make
 - **Languages**: C for compiler and VM implementation
 - **Algorithms**: Recursive descent parsing, symbol resolution
 - **System Design**: Multi-stage compilation pipeline with clear interfaces between components
+
+## Quick Start
+
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/polo.git
+cd polo
+
+# Build the compiler
+make
+
+# Run the hello world example
+./polo examples/hello.polo
+```
 
 ## Language Overview
 
@@ -87,17 +98,6 @@ void main() {
 
 More examples can be found in the `examples` folder.
 For details on the language grammar, see the `grammar_current.txt` file included in the repository.
-
-## Architecture
-
-Polo uses a multi-stage compilation process:
-
-1. **Scanner**: Converts source code into a stream of tokens
-2. **Parser**: Transforms tokens into an Abstract Syntax Tree (AST)
-3. **Error Checker**: Validates the AST for semantic correctness
-4. **Compiler**: Translates the AST into an intermediate representation (IR)
-5. **Linker**: Resolves references within the IR
-6. **Virtual Machine**: Executes the linked IR
 
 
 ## Lessons Learned & Future Development
