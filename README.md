@@ -1,22 +1,40 @@
-# Polo Programming Language
+<div align="center">
+  <h1>Polo Programming Language</h1>
+  <p><em>A modern, statically-typed language with clean syntax and efficient execution</em></p>
+  
+  ![Status](https://img.shields.io/badge/status-active-success)
+  ![Build](https://img.shields.io/badge/build-passing-success)
+  ![License](https://img.shields.io/badge/license-MIT-blue)
+</div>
 
 Polo is a general-purpose programming language designed with simplicity and expressiveness in mind. It offers a clean syntax with static typing, allowing developers to write concise yet readable code. Polo is built with a complete compiler pipeline from lexical analysis to bytecode execution.
 
-## Building the Project
-
-To compile the Polo compiler and VM, use the standard make command:
+## Quick Start
 
 ```bash
+# Clone the repository
+git clone https://github.com/yourusername/polo.git
+cd polo
+
+# Build the compiler
 make
+
+# Run the hello world example
+./polo examples/hello.polo
 ```
 
-## Running Code
+## Technical Highlights
 
-To run code in `file.polo`, use the following command:
+- **Custom Stack-Based VM**: Implemented a virtual machine with optimized instruction set
+- **Robust Type System**: Built a complete static type checking system
+- **Error Recovery**: Sophisticated error handling that allows the compiler to continue after errors
+- **Multi-stage Compilation**: From source code to bytecode with intermediate representations
 
-```bash
-./polo file.polo
-```
+## Demonstrated Skills
+
+- **Languages**: C for compiler and VM implementation
+- **Algorithms**: Recursive descent parsing, symbol resolution
+- **System Design**: Multi-stage compilation pipeline with clear interfaces between components
 
 ## Language Overview
 
@@ -80,7 +98,7 @@ void main() {
 }
 ```
 
-More examples can be found in the `tests` folder.
+More examples can be found in the `examples` folder.
 
 ## Lessons Learned & Future Development
 
