@@ -96,7 +96,7 @@ Polo uses a multi-stage compilation process:
 ## Demonstrated Skills
 
 - **Languages**: C for compiler and VM implementation
-- **Algorithms**: Recursive descent parsing, symbol resolution
+- **Algorithms**: Recursive descent parsing, symbol resolution, dfs linking
 - **System Design**: Multi-stage compilation pipeline with clear interfaces between components
 
 ## Lessons Learned & Future Development
