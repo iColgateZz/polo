@@ -2,8 +2,6 @@
   <h1>Polo Programming Language</h1>
   <p><em>A modern, statically-typed language with clean syntax and efficient execution</em></p>
   
-  ![Status](https://img.shields.io/badge/status-active-success)
-  ![Build](https://img.shields.io/badge/build-passing-success)
   ![License](https://img.shields.io/badge/license-MIT-blue)
 </div>
 
@@ -15,7 +13,7 @@ Polo is a general-purpose programming language designed with simplicity and expr
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/polo.git
+git clone https://github.com/iColgateZz/polo.git
 cd polo
 
 # Build the compiler
