@@ -7,31 +7,9 @@
   ![License](https://img.shields.io/badge/license-MIT-blue)
 </div>
 
+## Introduction
+
 Polo is a general-purpose programming language designed with simplicity and expressiveness in mind. It offers a clean syntax with static typing, allowing developers to write concise yet readable code. Polo is built with a complete compiler pipeline from lexical analysis to bytecode execution.
-
-## Architecture
-
-Polo uses a multi-stage compilation process:
-
-1. **Scanner**: Converts source code into a stream of tokens
-2. **Parser**: Transforms tokens into an Abstract Syntax Tree (AST)
-3. **Error Checker**: Validates the AST for semantic correctness
-4. **Compiler**: Translates the AST into an intermediate representation (IR)
-5. **Linker**: Resolves references within the IR
-6. **Virtual Machine**: Executes the linked IR
-
-## Technical Highlights
-
-- **Custom Stack-Based VM**: Implemented a virtual machine with optimized instruction set
-- **Robust Type System**: Built a complete static type checking system
-- **Error Recovery**: Sophisticated error handling that allows the compiler to continue after errors
-- **Multi-stage Compilation**: From source code to bytecode with intermediate representations
-
-## Demonstrated Skills
-
-- **Languages**: C for compiler and VM implementation
-- **Algorithms**: Recursive descent parsing, symbol resolution
-- **System Design**: Multi-stage compilation pipeline with clear interfaces between components
 
 ## Quick Start
 
@@ -99,6 +77,29 @@ void main() {
 More examples can be found in the `examples` folder.
 For details on the language grammar, see the `grammar_current.txt` file included in the repository.
 
+## Architecture
+
+Polo uses a multi-stage compilation process:
+
+1. **Scanner**: Converts source code into a stream of tokens
+2. **Parser**: Transforms tokens into an Abstract Syntax Tree (AST)
+3. **Error Checker**: Validates the AST for semantic correctness
+4. **Compiler**: Translates the AST into an intermediate representation (IR)
+5. **Linker**: Resolves references within the IR
+6. **Virtual Machine**: Executes the linked IR
+
+## Technical Highlights
+
+- **Custom Stack-Based VM**: Implemented a virtual machine with optimized instruction set
+- **Robust Type System**: Built a complete static type checking system
+- **Error Recovery**: Sophisticated error handling that allows the compiler to continue after errors
+- **Multi-stage Compilation**: From source code to bytecode with intermediate representations
+
+## Demonstrated Skills
+
+- **Languages**: C for compiler and VM implementation
+- **Algorithms**: Recursive descent parsing, symbol resolution
+- **System Design**: Multi-stage compilation pipeline with clear interfaces between components
 
 ## Lessons Learned & Future Development
 
